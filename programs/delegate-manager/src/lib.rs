@@ -7,28 +7,28 @@ pub mod delegate_manager {
     use super::*;
 
     pub fn initialize_delegate(ctx: Context<InitializeDelegate>) -> Result<()> {
-        let state = &mut ctx.accounts.state;
-        state.authority = ctx.accounts.authority.key();
-        state.delegator = ctx.accounts.delegator.key();
-        state.authorised = false;
+        let delegation = &mut ctx.accounts.delegation;
+        delegation.authority = ctx.accounts.authority.key();
+        delegation.delegator = ctx.accounts.delegator.key();
+        delegation.authorised = false;
         Ok(())
     }
 
     pub fn confirm_delegate(ctx: Context<ConfirmDelegate>) -> Result<()> {
-        let state = &mut ctx.accounts.state;
+        let delegation = &mut ctx.accounts.delegation;
         require!(
-            ctx.accounts.delegator.key() == state.delegator,
+            ctx.accounts.delegator.key() == delegation.delegator,
             DMError::WrongDelegator
         );
-        require!(!state.authorised, DMError::AlreadyAuthorised);
-        state.authorised = true;
+        require!(!delegation.authorised, DMError::AlreadyAuthorised);
+        delegation.authorised = true;
         Ok(())
     }
 
     pub fn cancel_delegate<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, CancelDelegate<'info>>,
     ) -> Result<()> {
-        let state = &mut ctx.accounts.state;
+        let delegation = &mut ctx.accounts.delegation;
         let remaining_accounts = &mut ctx.remaining_accounts.iter();
         let authority = remaining_accounts
             .next()
@@ -36,14 +36,20 @@ pub mod delegate_manager {
         let delegate = remaining_accounts
             .next()
             .expect("Expected delegate as remaining account");
-        require!(authority.key() == state.authority, DMError::WrongAuthority);
-        require!(delegate.key() == state.authority, DMError::WrongDelegator);
+        require!(
+            authority.key() == delegation.authority,
+            DMError::WrongAuthority
+        );
+        require!(
+            delegate.key() == delegation.authority,
+            DMError::WrongDelegator
+        );
         require!(
             authority.is_signer || delegate.is_signer,
             DMError::WrongSigner
         );
 
-        state.close(authority.to_account_info())?;
+        delegation.close(authority.to_account_info())?;
 
         Ok(())
     }
@@ -62,7 +68,7 @@ pub struct InitializeDelegate<'info> {
         space = 8 + 32 + 32 + 1,
         payer = authority
     )]
-    pub state: Box<Account<'info, Delegation>>,
+    pub delegation: Box<Account<'info, Delegation>>,
     pub system_program: Program<'info, System>,
 }
 
@@ -71,14 +77,14 @@ pub struct ConfirmDelegate<'info> {
     #[account(mut)]
     pub delegator: Signer<'info>,
     #[account(mut)]
-    pub state: Box<Account<'info, Delegation>>,
+    pub delegation: Box<Account<'info, Delegation>>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct CancelDelegate<'info> {
     #[account(mut)]
-    pub state: Box<Account<'info, Delegation>>,
+    pub delegation: Box<Account<'info, Delegation>>,
     pub system_program: Program<'info, System>,
 }
 
