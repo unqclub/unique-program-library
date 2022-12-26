@@ -41,7 +41,7 @@ pub mod delegate_manager {
             DMError::WrongAuthority
         );
         require!(
-            delegate.key() == delegation.authority,
+            delegate.key() == delegation.delegator,
             DMError::WrongDelegator
         );
         require!(
