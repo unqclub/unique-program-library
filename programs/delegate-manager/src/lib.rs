@@ -59,7 +59,7 @@ pub mod delegate_manager {
 pub struct InitializeDelegate<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-    ///CHECK: can be any account who can sign confirmation
+    ///CHECK: can be any account which can sign confirmation
     pub delegator: UncheckedAccount<'info>,
     #[account(
         init,
