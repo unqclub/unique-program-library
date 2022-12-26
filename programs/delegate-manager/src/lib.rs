@@ -100,6 +100,6 @@ enum DMError {
     WrongAuthority,
     #[msg("Wrong signer!")]
     WrongSigner,
-    #[msg("Wrong delegator!")]
+    #[msg("Authorization already approved!")]
     AlreadyAuthorised,
 }
