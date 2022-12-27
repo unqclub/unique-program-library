@@ -108,4 +108,24 @@ enum DMError {
     WrongSigner,
     #[msg("Authorization already approved!")]
     AlreadyAuthorised,
+    #[msg("The account provided has no authority!")]
+    NotAuthorized,
+}
+
+pub fn check_authorization(
+    authority: &AccountInfo,
+    delegate: &AccountInfo,
+    delegation: &Account<Delegation>,
+) -> Result<()> {
+    require!(
+        authority.key() == delegation.authority,
+        DMError::WrongAuthority
+    );
+    require!(
+        delegate.key() == delegation.delegator,
+        DMError::WrongDelegator
+    );
+    require!(delegation.authorised, DMError::NotAuthorized);
+
+    Ok(())
 }
