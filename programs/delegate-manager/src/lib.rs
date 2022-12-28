@@ -1,55 +1,52 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK");
 
 #[program]
 pub mod delegate_manager {
     use super::*;
 
     pub fn initialize_delegate(ctx: Context<InitializeDelegate>) -> Result<()> {
-        let delegation = &mut ctx.accounts.delegation;
-        delegation.authority = ctx.accounts.authority.key();
-        delegation.delegator = ctx.accounts.delegator.key();
-        delegation.authorised = false;
+        let representation = &mut ctx.accounts.representation;
+        representation.master = ctx.accounts.master.key();
+        representation.representative = ctx.accounts.representative.key();
+        representation.authorised = false;
         Ok(())
     }
 
     pub fn confirm_delegate(ctx: Context<ConfirmDelegate>) -> Result<()> {
-        let delegation = &mut ctx.accounts.delegation;
+        let representation = &mut ctx.accounts.representation;
         require!(
-            ctx.accounts.delegator.key() == delegation.delegator,
-            DMError::WrongDelegator
+            ctx.accounts.representative.key() == representation.representative,
+            DMError::WrongRepresentative
         );
-        require!(!delegation.authorised, DMError::AlreadyAuthorised);
-        delegation.authorised = true;
+        require!(!representation.authorised, DMError::AlreadyAuthorised);
+        representation.authorised = true;
         Ok(())
     }
 
     pub fn cancel_delegate<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, CancelDelegate<'info>>,
     ) -> Result<()> {
-        let delegation = &mut ctx.accounts.delegation;
+        let representation = &mut ctx.accounts.representation;
         let remaining_accounts = &mut ctx.remaining_accounts.iter();
-        let authority = remaining_accounts
+        let master = remaining_accounts
             .next()
-            .expect("Expected authority as remaining account");
-        let delegate = remaining_accounts
+            .expect("Expected master as remaining account");
+        let representative = remaining_accounts
             .next()
-            .expect("Expected delegate as remaining account");
+            .expect("Expected representative as remaining account");
+        require!(master.key() == representation.master, DMError::WrongMaster);
         require!(
-            authority.key() == delegation.authority,
-            DMError::WrongAuthority
+            representative.key() == representation.representative,
+            DMError::WrongRepresentative
         );
         require!(
-            delegate.key() == delegation.delegator,
-            DMError::WrongDelegator
-        );
-        require!(
-            authority.is_signer || delegate.is_signer,
+            master.is_signer || representative.is_signer,
             DMError::WrongSigner
         );
 
-        delegation.close(authority.to_account_info())?;
+        representation.close(master.to_account_info())?;
 
         Ok(())
     }
@@ -58,42 +55,42 @@ pub mod delegate_manager {
 #[derive(Accounts)]
 pub struct InitializeDelegate<'info> {
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub master: Signer<'info>,
     ///CHECK: can be any account which can sign confirmation
-    pub delegator: UncheckedAccount<'info>,
+    pub representative: UncheckedAccount<'info>,
     #[account(
         init,
-        seeds = [b"authorize", authority.key().as_ref(), delegator.key().as_ref()],
+        seeds = [b"authorize", master.key().as_ref(), representative.key().as_ref()],
         bump,
         space = 8 + 32 + 32 + 1,
-        payer = authority
+        payer = master
     )]
-    pub delegation: Box<Account<'info, Delegation>>,
+    pub representation: Box<Account<'info, Representation>>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct ConfirmDelegate<'info> {
     #[account(mut)]
-    pub delegator: Signer<'info>,
+    pub representative: Signer<'info>,
     #[account(mut)]
-    pub delegation: Box<Account<'info, Delegation>>,
+    pub representation: Box<Account<'info, Representation>>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct CancelDelegate<'info> {
     #[account(mut)]
-    pub delegation: Box<Account<'info, Delegation>>,
+    pub representation: Box<Account<'info, Representation>>,
     pub system_program: Program<'info, System>,
 }
 
 #[account]
-pub struct Delegation {
+pub struct Representation {
     // The creator of the delegation
-    pub authority: Pubkey,
+    pub master: Pubkey,
     // The wallet who delegates
-    pub delegator: Pubkey,
+    pub representative: Pubkey,
     // Confirmation flag
     pub authorised: bool,
 }
@@ -101,9 +98,9 @@ pub struct Delegation {
 #[error_code]
 enum DMError {
     #[msg("Wrong delegator!")]
-    WrongDelegator,
+    WrongRepresentative,
     #[msg("Wrong authority!")]
-    WrongAuthority,
+    WrongMaster,
     #[msg("Wrong signer!")]
     WrongSigner,
     #[msg("Authorization already approved!")]
@@ -113,19 +110,16 @@ enum DMError {
 }
 
 pub fn check_authorization(
-    authority: &AccountInfo,
-    delegate: &AccountInfo,
-    delegation: &Account<Delegation>,
+    master: &AccountInfo,
+    representative: &AccountInfo,
+    representation: &Account<Representation>,
 ) -> Result<()> {
+    require!(master.key() == representation.master, DMError::WrongMaster);
     require!(
-        authority.key() == delegation.authority,
-        DMError::WrongAuthority
+        representative.key() == representation.representative,
+        DMError::WrongRepresentative
     );
-    require!(
-        delegate.key() == delegation.delegator,
-        DMError::WrongDelegator
-    );
-    require!(delegation.authorised, DMError::NotAuthorized);
+    require!(representation.authorised, DMError::NotAuthorized);
 
     Ok(())
 }

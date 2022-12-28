@@ -16,21 +16,24 @@ describe("delegate-manager", () => {
   const connection = anchor.getProvider().connection;
 
   it("Initialize, confirm, cancel by authority", async () => {
-    const authority = Keypair.generate();
-    const delegate = Keypair.generate();
+    const master = Keypair.generate();
+    const representative = Keypair.generate();
 
     await connection.confirmTransaction(
-      await connection.requestAirdrop(authority.publicKey, LAMPORTS_PER_SOL)
+      await connection.requestAirdrop(master.publicKey, LAMPORTS_PER_SOL)
     );
     await connection.confirmTransaction(
-      await connection.requestAirdrop(delegate.publicKey, LAMPORTS_PER_SOL)
+      await connection.requestAirdrop(
+        representative.publicKey,
+        LAMPORTS_PER_SOL
+      )
     );
 
-    const [delegation] = PublicKey.findProgramAddressSync(
+    const [representation] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorize"),
-        authority.publicKey.toBuffer(),
-        delegate.publicKey.toBuffer(),
+        master.publicKey.toBuffer(),
+        representative.publicKey.toBuffer(),
       ],
       program.programId
     );
@@ -38,48 +41,61 @@ describe("delegate-manager", () => {
     await program.methods
       .initializeDelegate()
       .accounts({
-        authority: authority.publicKey,
-        delegator: delegate.publicKey,
-        delegation,
+        master: master.publicKey,
+        representative: representative.publicKey,
+        representation,
         systemProgram: SystemProgram.programId,
       })
-      .signers([authority])
+      .signers([master])
       .rpc();
 
-    assert.deepEqual(await program.account.delegation.fetch(delegation), {
-      authority: authority.publicKey,
-      delegator: delegate.publicKey,
-      authorised: false,
-    });
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: false,
+      }
+    );
 
     await program.methods
       .confirmDelegate()
       .accounts({
-        delegator: delegate.publicKey,
-        delegation,
+        representative: representative.publicKey,
+        representation,
         systemProgram: SystemProgram.programId,
       })
-      .signers([delegate])
+      .signers([representative])
       .rpc();
 
-    assert.deepEqual(await program.account.delegation.fetch(delegation), {
-      authority: authority.publicKey,
-      delegator: delegate.publicKey,
-      authorised: true,
-    });
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: true,
+      }
+    );
 
     await program.methods
       .cancelDelegate()
-      .accounts({ delegation, systemProgram: SystemProgram.programId })
+      .accounts({
+        representation,
+        systemProgram: SystemProgram.programId,
+      })
       .remainingAccounts([
-        { pubkey: authority.publicKey, isSigner: true, isWritable: true },
-        { pubkey: delegate.publicKey, isSigner: false, isWritable: false },
+        { pubkey: master.publicKey, isSigner: true, isWritable: true },
+        {
+          pubkey: representative.publicKey,
+          isSigner: false,
+          isWritable: false,
+        },
       ])
-      .signers([authority])
+      .signers([master])
       .rpc();
 
     try {
-      await program.account.delegation.fetch(delegation);
+      await program.account.representation.fetch(representation);
       assert(false);
     } catch (error) {
       assert.ok(`${error}`.includes("Account does not exist or has no data"));
@@ -87,21 +103,24 @@ describe("delegate-manager", () => {
   });
 
   it("Initialize, confirm, cancel by delegate", async () => {
-    const authority = Keypair.generate();
-    const delegate = Keypair.generate();
+    const master = Keypair.generate();
+    const representative = Keypair.generate();
 
     await connection.confirmTransaction(
-      await connection.requestAirdrop(authority.publicKey, LAMPORTS_PER_SOL)
+      await connection.requestAirdrop(master.publicKey, LAMPORTS_PER_SOL)
     );
     await connection.confirmTransaction(
-      await connection.requestAirdrop(delegate.publicKey, LAMPORTS_PER_SOL)
+      await connection.requestAirdrop(
+        representative.publicKey,
+        LAMPORTS_PER_SOL
+      )
     );
 
-    const [delegation] = PublicKey.findProgramAddressSync(
+    const [representation] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorize"),
-        authority.publicKey.toBuffer(),
-        delegate.publicKey.toBuffer(),
+        master.publicKey.toBuffer(),
+        representative.publicKey.toBuffer(),
       ],
       program.programId
     );
@@ -109,48 +128,57 @@ describe("delegate-manager", () => {
     await program.methods
       .initializeDelegate()
       .accounts({
-        authority: authority.publicKey,
-        delegator: delegate.publicKey,
-        delegation,
+        master: master.publicKey,
+        representative: representative.publicKey,
+        representation,
         systemProgram: SystemProgram.programId,
       })
-      .signers([authority])
+      .signers([master])
       .rpc();
 
-    assert.deepEqual(await program.account.delegation.fetch(delegation), {
-      authority: authority.publicKey,
-      delegator: delegate.publicKey,
-      authorised: false,
-    });
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: false,
+      }
+    );
 
     await program.methods
       .confirmDelegate()
       .accounts({
-        delegator: delegate.publicKey,
-        delegation,
+        representative: representative.publicKey,
+        representation,
         systemProgram: SystemProgram.programId,
       })
-      .signers([delegate])
+      .signers([representative])
       .rpc();
 
-    assert.deepEqual(await program.account.delegation.fetch(delegation), {
-      authority: authority.publicKey,
-      delegator: delegate.publicKey,
-      authorised: true,
-    });
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: true,
+      }
+    );
 
     await program.methods
       .cancelDelegate()
-      .accounts({ delegation, systemProgram: SystemProgram.programId })
+      .accounts({
+        representation,
+        systemProgram: SystemProgram.programId,
+      })
       .remainingAccounts([
-        { pubkey: authority.publicKey, isSigner: false, isWritable: true },
-        { pubkey: delegate.publicKey, isSigner: true, isWritable: false },
+        { pubkey: master.publicKey, isSigner: false, isWritable: true },
+        { pubkey: representative.publicKey, isSigner: true, isWritable: false },
       ])
-      .signers([delegate])
+      .signers([representative])
       .rpc();
 
     try {
-      await program.account.delegation.fetch(delegation);
+      await program.account.representation.fetch(representation);
       assert(false);
     } catch (error) {
       assert.ok(`${error}`.includes("Account does not exist or has no data"));

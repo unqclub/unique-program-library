@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-delegate_manager = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+delegate_manager = "3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK"
 
 [registry]
 url = "https://api.apr.dev"
