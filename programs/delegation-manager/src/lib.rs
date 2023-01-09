@@ -89,7 +89,6 @@ pub struct CancelDelegation<'info> {
 }
 
 #[account]
-#[derive(Debug)]
 pub struct Delegation {
     // The creator of the delegation
     pub master: Pubkey,
@@ -125,7 +124,6 @@ pub fn check_authorization(
             Account::<Delegation>::try_from(delegation_info)
                 .expect("Wrong account passed as Delegation account"),
         );
-        msg!("{:#?}", delegation);
         require_keys_eq!(master.key(), delegation.master);
         require_keys_eq!(representative.key(), delegation.representative);
         require!(delegation.authorised, DelegationError::NotAuthorized);
