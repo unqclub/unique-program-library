@@ -112,9 +112,13 @@ enum DelegationError {
     NotAuthorized,
 }
 
-pub fn check_authorization(representative: &AccountInfo, delegation: &AccountInfo) -> Result<()> {
+pub fn check_authorization(
+    representative: &AccountInfo,
+    delegation_info: &AccountInfo,
+) -> Result<()> {
+    require_keys_eq!(*delegation_info.owner, ID);
     let delegation = Box::new(
-        Account::<Delegation>::try_from(delegation)
+        Account::<Delegation>::try_from(delegation_info)
             .expect("Wrong account passed as Delegation account"),
     );
     require_keys_eq!(representative.key(), delegation.representative);
