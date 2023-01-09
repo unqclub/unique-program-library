@@ -190,6 +190,7 @@ describe("delegate-manager", () => {
   it("Example program using delegate-manager", async () => {
     const master = Keypair.generate();
     const representative = Keypair.generate();
+    const hacker = Keypair.generate();
 
     await connection.confirmTransaction(
       await connection.requestAirdrop(master.publicKey, LAMPORTS_PER_SOL)
@@ -199,6 +200,9 @@ describe("delegate-manager", () => {
         representative.publicKey,
         LAMPORTS_PER_SOL
       )
+    );
+    await connection.confirmTransaction(
+      await connection.requestAirdrop(hacker.publicKey, LAMPORTS_PER_SOL)
     );
 
     const [representation] = PublicKey.findProgramAddressSync(
@@ -293,5 +297,30 @@ describe("delegate-manager", () => {
       ])
       .signers([representative])
       .rpc();
+
+    try {
+      await example.methods
+        .incrementCounter()
+        .accounts({
+          counter: counterAddress,
+          payer: hacker.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .remainingAccounts([
+          { pubkey: representation, isSigner: false, isWritable: false },
+        ])
+        .signers([hacker])
+        .rpc();
+    } catch (error) {
+      assert.ok(
+        error.errorLogs[0].includes("RequireKeysEqViolated"),
+        "Wrong error"
+      );
+    }
+
+    assert.equal(
+      (await example.account.counter.fetch(counterAddress)).count,
+      2
+    );
   });
 });
