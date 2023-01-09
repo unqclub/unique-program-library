@@ -4,7 +4,7 @@ declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
 
 #[program]
 pub mod example {
-    use delegate_manager::Representation;
+    use delegation_manager::Delegation;
 
     use super::*;
 
@@ -15,15 +15,15 @@ pub mod example {
             counter.authority = ctx.accounts.payer.key();
         } else {
             if counter.authority != ctx.accounts.payer.key() {
-                let representation = Account::<Representation>::try_from(
+                let delegation = Account::<Delegation>::try_from(
                     ctx.remaining_accounts
                         .iter()
                         .next()
-                        .expect("Missing Representation account"),
+                        .expect("Missing Delegation account"),
                 )
                 .expect("Wrong account passed as Representation account");
-                require_keys_eq!(representation.representative, ctx.accounts.payer.key());
-                require!(representation.authorised, CounterError::NotAuthorized);
+                require_keys_eq!(delegation.representative, ctx.accounts.payer.key());
+                require!(delegation.authorised, CounterError::NotAuthorized);
             }
         }
         counter.count += 1;

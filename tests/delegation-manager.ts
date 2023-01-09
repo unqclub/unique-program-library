@@ -10,7 +10,7 @@ import { assert } from "chai";
 import { DelegateManager } from "../target/types/delegate_manager";
 import { Example } from "../target/types/example";
 
-describe("delegate-manager", () => {
+describe("delegation-manager", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = anchor.workspace.DelegateManager as Program<DelegateManager>;
@@ -31,7 +31,7 @@ describe("delegate-manager", () => {
       )
     );
 
-    const [representation] = PublicKey.findProgramAddressSync(
+    const [delegation] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorize"),
         master.publicKey.toBuffer(),
@@ -45,44 +45,38 @@ describe("delegate-manager", () => {
       .accounts({
         master: master.publicKey,
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([master])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: false,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: false,
+    });
 
     await program.methods
       .confirmDelegate()
       .accounts({
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([representative])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: true,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: true,
+    });
 
     await program.methods
       .cancelDelegate()
       .accounts({
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([
@@ -97,7 +91,7 @@ describe("delegate-manager", () => {
       .rpc();
 
     try {
-      await program.account.representation.fetch(representation);
+      await program.account.delegation.fetch(delegation);
       assert(false);
     } catch (error) {
       assert.ok(`${error}`.includes("Account does not exist or has no data"));
@@ -118,7 +112,7 @@ describe("delegate-manager", () => {
       )
     );
 
-    const [representation] = PublicKey.findProgramAddressSync(
+    const [delegation] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorize"),
         master.publicKey.toBuffer(),
@@ -132,44 +126,38 @@ describe("delegate-manager", () => {
       .accounts({
         master: master.publicKey,
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([master])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: false,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: false,
+    });
 
     await program.methods
       .confirmDelegate()
       .accounts({
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([representative])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: true,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: true,
+    });
 
     await program.methods
       .cancelDelegate()
       .accounts({
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([
@@ -180,7 +168,7 @@ describe("delegate-manager", () => {
       .rpc();
 
     try {
-      await program.account.representation.fetch(representation);
+      await program.account.delegation.fetch(delegation);
       assert(false);
     } catch (error) {
       assert.ok(`${error}`.includes("Account does not exist or has no data"));
@@ -205,7 +193,7 @@ describe("delegate-manager", () => {
       await connection.requestAirdrop(hacker.publicKey, LAMPORTS_PER_SOL)
     );
 
-    const [representation] = PublicKey.findProgramAddressSync(
+    const [delegation] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("authorize"),
         master.publicKey.toBuffer(),
@@ -219,39 +207,33 @@ describe("delegate-manager", () => {
       .accounts({
         master: master.publicKey,
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([master])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: false,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: false,
+    });
 
     await program.methods
       .confirmDelegate()
       .accounts({
         representative: representative.publicKey,
-        representation,
+        delegation,
         systemProgram: SystemProgram.programId,
       })
       .signers([representative])
       .rpc();
 
-    assert.deepEqual(
-      await program.account.representation.fetch(representation),
-      {
-        master: master.publicKey,
-        representative: representative.publicKey,
-        authorised: true,
-      }
-    );
+    assert.deepEqual(await program.account.delegation.fetch(delegation), {
+      master: master.publicKey,
+      representative: representative.publicKey,
+      authorised: true,
+    });
 
     const [counterAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from("counter-state")],
@@ -280,7 +262,7 @@ describe("delegate-manager", () => {
         .rpc();
     } catch (error) {
       assert.ok(
-        error.logs[2].includes("Missing Representation account"),
+        error.logs[2].includes("Missing Delegation account"),
         "Wrong error"
       );
     }
@@ -293,7 +275,7 @@ describe("delegate-manager", () => {
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([
-        { pubkey: representation, isSigner: false, isWritable: false },
+        { pubkey: delegation, isSigner: false, isWritable: false },
       ])
       .signers([representative])
       .rpc();
@@ -307,7 +289,7 @@ describe("delegate-manager", () => {
           systemProgram: SystemProgram.programId,
         })
         .remainingAccounts([
-          { pubkey: representation, isSigner: false, isWritable: false },
+          { pubkey: delegation, isSigner: false, isWritable: false },
         ])
         .signers([hacker])
         .rpc();

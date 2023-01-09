@@ -17,4 +17,4 @@ default = []
 
 [dependencies]
 anchor-lang = {version = "0.26.0", features = ["init-if-needed"]}
-delegate-manager = { path = "../delegate-manager/", features = ["cpi"]}
+delegation-manager = { path = "../delegation-manager/", features = ["cpi"]}
