@@ -112,19 +112,12 @@ enum DelegationError {
     NotAuthorized,
 }
 
-pub fn check_authorization(
-    master: &AccountInfo,
-    representative: &AccountInfo,
-    delegation: &Account<Delegation>,
-) -> Result<()> {
-    require!(
-        master.key() == delegation.master,
-        DelegationError::WrongMaster
+pub fn check_authorization(representative: &AccountInfo, delegation: &AccountInfo) -> Result<()> {
+    let delegation = Box::new(
+        Account::<Delegation>::try_from(delegation)
+            .expect("Wrong account passed as Delegation account"),
     );
-    require!(
-        representative.key() == delegation.representative,
-        DelegationError::WrongRepresentative
-    );
+    require_keys_eq!(representative.key(), delegation.representative);
     require!(delegation.authorised, DelegationError::NotAuthorized);
 
     Ok(())

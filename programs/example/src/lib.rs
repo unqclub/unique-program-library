@@ -4,7 +4,7 @@ declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
 
 #[program]
 pub mod example {
-    use delegation_manager::Delegation;
+    use delegation_manager::check_authorization;
 
     use super::*;
 
@@ -15,15 +15,12 @@ pub mod example {
             counter.authority = ctx.accounts.payer.key();
         } else {
             if counter.authority != ctx.accounts.payer.key() {
-                let delegation = Account::<Delegation>::try_from(
-                    ctx.remaining_accounts
-                        .iter()
-                        .next()
-                        .expect("Missing Delegation account"),
-                )
-                .expect("Wrong account passed as Representation account");
-                require_keys_eq!(delegation.representative, ctx.accounts.payer.key());
-                require!(delegation.authorised, CounterError::NotAuthorized);
+                let delegation = ctx
+                    .remaining_accounts
+                    .iter()
+                    .next()
+                    .expect("Missing Delegation account");
+                check_authorization(&ctx.accounts.payer.to_account_info(), delegation)?;
             }
         }
         counter.count += 1;
@@ -50,10 +47,4 @@ pub struct IncrementCounter<'info> {
 pub struct Counter {
     count: u32,
     authority: Pubkey,
-}
-
-#[error_code]
-enum CounterError {
-    #[msg("The account provided has no authority!")]
-    NotAuthorized,
 }
