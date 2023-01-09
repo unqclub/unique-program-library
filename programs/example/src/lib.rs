@@ -8,7 +8,7 @@ pub mod example {
 
     use super::*;
 
-    pub fn increment_counter(ctx: Context<Count>) -> Result<()> {
+    pub fn increment_counter(ctx: Context<IncrementCounter>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
 
         if counter.count == 0 {
@@ -32,7 +32,7 @@ pub mod example {
 }
 
 #[derive(Accounts)]
-pub struct Count<'info> {
+pub struct IncrementCounter<'info> {
     #[account(
         init_if_needed,
         seeds = [b"counter-state"],
