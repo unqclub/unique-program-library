@@ -8,11 +8,13 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import { DelegateManager } from "../target/types/delegate_manager";
+import { Example } from "../target/types/example";
 
 describe("delegate-manager", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = anchor.workspace.DelegateManager as Program<DelegateManager>;
+  const example = anchor.workspace.Example as Program<Example>;
   const connection = anchor.getProvider().connection;
 
   it("Initialize, confirm, cancel by authority", async () => {
@@ -183,5 +185,113 @@ describe("delegate-manager", () => {
     } catch (error) {
       assert.ok(`${error}`.includes("Account does not exist or has no data"));
     }
+  });
+
+  it("Example program using delegate-manager", async () => {
+    const master = Keypair.generate();
+    const representative = Keypair.generate();
+
+    await connection.confirmTransaction(
+      await connection.requestAirdrop(master.publicKey, LAMPORTS_PER_SOL)
+    );
+    await connection.confirmTransaction(
+      await connection.requestAirdrop(
+        representative.publicKey,
+        LAMPORTS_PER_SOL
+      )
+    );
+
+    const [representation] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("authorize"),
+        master.publicKey.toBuffer(),
+        representative.publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    await program.methods
+      .initializeDelegate()
+      .accounts({
+        master: master.publicKey,
+        representative: representative.publicKey,
+        representation,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([master])
+      .rpc();
+
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: false,
+      }
+    );
+
+    await program.methods
+      .confirmDelegate()
+      .accounts({
+        representative: representative.publicKey,
+        representation,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([representative])
+      .rpc();
+
+    assert.deepEqual(
+      await program.account.representation.fetch(representation),
+      {
+        master: master.publicKey,
+        representative: representative.publicKey,
+        authorised: true,
+      }
+    );
+
+    const [counterAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from("counter-state")],
+      example.programId
+    );
+
+    await example.methods
+      .incrementCounter()
+      .accounts({
+        counter: counterAddress,
+        payer: master.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .signers([master])
+      .rpc();
+
+    try {
+      await example.methods
+        .incrementCounter()
+        .accounts({
+          counter: counterAddress,
+          payer: representative.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([representative])
+        .rpc();
+    } catch (error) {
+      assert.ok(
+        error.logs[2].includes("Missing Representation account"),
+        "Wrong error"
+      );
+    }
+
+    await example.methods
+      .incrementCounter()
+      .accounts({
+        counter: counterAddress,
+        payer: representative.publicKey,
+        systemProgram: SystemProgram.programId,
+      })
+      .remainingAccounts([
+        { pubkey: representation, isSigner: false, isWritable: false },
+      ])
+      .signers([representative])
+      .rpc();
   });
 });
