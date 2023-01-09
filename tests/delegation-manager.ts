@@ -245,6 +245,7 @@ describe("delegation-manager", () => {
       .accounts({
         counter: counterAddress,
         payer: master.publicKey,
+        authority: master.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .signers([master])
@@ -256,13 +257,14 @@ describe("delegation-manager", () => {
         .accounts({
           counter: counterAddress,
           payer: representative.publicKey,
+          authority: master.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .signers([representative])
         .rpc();
     } catch (error) {
       assert.ok(
-        error.logs[2].includes("Missing Delegation account"),
+        error.logs[2].includes("Missing Delegation Account"),
         "Wrong error"
       );
     }
@@ -272,6 +274,7 @@ describe("delegation-manager", () => {
       .accounts({
         counter: counterAddress,
         payer: representative.publicKey,
+        authority: master.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .remainingAccounts([
@@ -286,6 +289,7 @@ describe("delegation-manager", () => {
         .accounts({
           counter: counterAddress,
           payer: hacker.publicKey,
+          authority: master.publicKey,
           systemProgram: SystemProgram.programId,
         })
         .remainingAccounts([

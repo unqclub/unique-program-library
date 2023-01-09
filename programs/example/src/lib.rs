@@ -14,14 +14,11 @@ pub mod example {
         if counter.count == 0 {
             counter.authority = ctx.accounts.payer.key();
         } else {
-            if counter.authority != ctx.accounts.payer.key() {
-                let delegation = ctx
-                    .remaining_accounts
-                    .iter()
-                    .next()
-                    .expect("Missing Delegation account");
-                check_authorization(&ctx.accounts.payer.to_account_info(), delegation)?;
-            }
+            check_authorization(
+                &ctx.accounts.authority.to_account_info(),
+                &ctx.accounts.payer.to_account_info(),
+                ctx.remaining_accounts.iter().next(),
+            )?;
         }
         counter.count += 1;
         Ok(())
@@ -40,6 +37,9 @@ pub struct IncrementCounter<'info> {
     pub counter: Box<Account<'info, Counter>>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(mut)]
+    ///CHECK: Checked by check_authorization fn
+    pub authority: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
