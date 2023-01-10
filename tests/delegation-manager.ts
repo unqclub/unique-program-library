@@ -7,13 +7,13 @@ import {
   SystemProgram,
 } from "@solana/web3.js";
 import { assert } from "chai";
-import { DelegateManager } from "../target/types/delegate_manager";
+import { DelegationManager as DelegateManager } from "../target/types/delegation_manager";
 import { Example } from "../target/types/example";
 
 describe("delegation-manager", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
 
-  const program = anchor.workspace.DelegateManager as Program<DelegateManager>;
+  const program = anchor.workspace.DelegationManager as Program<DelegateManager>;
   const example = anchor.workspace.Example as Program<Example>;
   const connection = anchor.getProvider().connection;
 
