@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 declare_id!("3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK");
 
 #[program]
-pub mod delegate_manager {
+pub mod delegation_manager {
     use super::*;
 
     pub fn initialize_delegate(ctx: Context<InitializeDelegation>) -> Result<()> {
