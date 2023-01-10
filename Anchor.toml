@@ -1,8 +1,16 @@
+[workspace]
+members = [
+  "delegation-manager/program",
+  "delegation-manager/example"
+]
+
 [features]
 seeds = false
 skip-lint = false
+
 [programs.localnet]
-delegate_manager = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+delegation_manager = "3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK"
+example = "972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a"
 
 [registry]
 url = "https://api.apr.dev"

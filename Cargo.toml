@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "delegation-manager/program",
+    "delegation-manager/example"
 ]
 
 [profile.release]

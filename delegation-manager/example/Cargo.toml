@@ -1,12 +1,12 @@
 [package]
-name = "delegate-manager"
+name = "example"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "delegate_manager"
+name = "example"
 
 [features]
 no-entrypoint = []
@@ -16,4 +16,5 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.26.0"
+anchor-lang = {version = "0.26.0", features = ["init-if-needed"]}
+delegation-manager = { path = "../program/", features = ["cpi"]}
