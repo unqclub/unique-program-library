@@ -14,6 +14,7 @@ pub mod example {
         if counter.count == 0 {
             counter.authority = ctx.accounts.payer.key();
         } else {
+            require_keys_eq!(ctx.accounts.authority.key(), counter.authority);
             check_authorization(
                 &ctx.accounts.authority.to_account_info(),
                 &ctx.accounts.payer.to_account_info(),
