@@ -99,7 +99,7 @@ pub struct Delegation {
 }
 
 #[error_code]
-enum DelegationError {
+pub enum DelegationError {
     #[msg("Wrong representative!")]
     WrongRepresentative,
     #[msg("Wrong authority!")]
