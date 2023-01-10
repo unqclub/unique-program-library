@@ -1,8 +1,12 @@
 [package]
 name = "delegation-manager"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Unique Account Delegation Manager Program"
+authors = ["Unique.VC <office@unique.vc>"]
+repository = "https://github.com/unqclub/unique-program-library"
+license = "Apache-2.0"
 edition = "2021"
+
 
 [lib]
 crate-type = ["cdylib", "lib"]
