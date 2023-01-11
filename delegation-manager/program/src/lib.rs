@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-declare_id!("3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK");
+declare_id!("FG82Bh2yS5dcydGXk2PCkZb3sEZdcDTXPJhQQ83kDK1n");
 /// Unique program library's Delegation Manager program.
 #[program]
 pub mod delegation_manager {

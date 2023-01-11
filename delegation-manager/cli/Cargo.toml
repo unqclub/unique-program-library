@@ -1,0 +1,25 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.3"
+console = "0.15.0"
+indicatif = "0.16.2"
+serde = "1.0.130"
+serde_derive = "1.0.103"
+serde_json = "1.0.68"
+solana-account-decoder = "=1.14.10"
+solana-clap-utils = "=1.14.10"
+solana-cli-config = "=1.14.10"
+solana-cli-output = "=1.14.10"
+solana-client = "=1.14.10"
+solana-logger = "=1.14.10"
+solana-remote-wallet = "=1.14.10"
+solana-sdk = "=1.14.10"
+strum = "0.24"
+strum_macros = "0.24"
+tokio = "1.14"
