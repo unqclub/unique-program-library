@@ -4,16 +4,12 @@ use solana_clap_utils::{
     input_parsers::{pubkey_of_signer, value_of},
     input_validators::normalize_to_url_if_moniker,
     keypair::{signer_from_path, signer_from_path_with_config, SignerFromPathConfig},
-    nonce::{NONCE_ARG, NONCE_AUTHORITY_ARG},
-    offline::{BLOCKHASH_ARG, DUMP_TRANSACTION_MESSAGE, SIGN_ONLY_ARG},
+    offline::{DUMP_TRANSACTION_MESSAGE, SIGN_ONLY_ARG},
 };
 use solana_cli_output::OutputFormat;
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_remote_wallet::remote_wallet::RemoteWalletManager;
-use solana_sdk::{
-    account::Account as RawAccount, commitment_config::CommitmentConfig, pubkey::Pubkey,
-    signature::Signer,
-};
+use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signer};
 use std::{process::exit, sync::Arc};
 
 pub(crate) struct Config {
@@ -28,6 +24,7 @@ pub(crate) struct Config {
     pub(crate) restrict_to_program_id: bool,
 }
 
+#[allow(unused)]
 impl Config {
     pub(crate) async fn new(
         matches: &ArgMatches<'_>,
@@ -53,7 +50,6 @@ impl Config {
             json_rpc_url,
             CommitmentConfig::confirmed(),
         ));
-        let sign_only = matches.is_present(SIGN_ONLY_ARG.name); // TODO
 
         Self::new_with_clients_and_ws_url(matches, wallet_manager, rpc_client, websocket_url).await
     }
@@ -133,35 +129,6 @@ impl Config {
             } else {
                 OutputFormat::Display
             });
-
-        let nonce_account = pubkey_of_signer(matches, NONCE_ARG.name, wallet_manager)
-            .unwrap_or_else(|e| {
-                eprintln!("error: {}", e);
-                exit(1);
-            });
-        let nonce_authority = if nonce_account.is_some() {
-            let (signer, nonce_authority) = signer_from_path(
-                matches,
-                matches
-                    .value_of(NONCE_AUTHORITY_ARG.name)
-                    .unwrap_or(&cli_config.keypair_path),
-                NONCE_AUTHORITY_ARG.name,
-                wallet_manager,
-            )
-            .map(Arc::from)
-            .map(|s: Arc<dyn Signer>| {
-                let p = s.pubkey();
-                (s, p)
-            })
-            .unwrap_or_else(|e| {
-                eprintln!("error: {}", e);
-                exit(1);
-            });
-
-            Some(nonce_authority)
-        } else {
-            None
-        };
 
         let sign_only = matches.is_present(SIGN_ONLY_ARG.name);
         let dump_transaction_message = matches.is_present(DUMP_TRANSACTION_MESSAGE.name);

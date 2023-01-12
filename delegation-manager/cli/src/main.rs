@@ -22,9 +22,10 @@ use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    system_program,
+    signer, system_program,
+    transaction::Transaction,
 };
-use std::{str::FromStr, sync::Arc};
+use std::{fmt::Display, process::exit, str::FromStr, sync::Arc};
 use strum_macros::{EnumString, IntoStaticStr};
 
 pub(crate) type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -83,11 +84,18 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
-async fn initialize_delegation(
+async fn command_initialize_delegation(
     config: &Config,
-    mut wallet_manager: Option<Arc<RemoteWalletManager>>,
+    signer: Arc<dyn Signer>,
+    representative: Pubkey,
 ) {
-    eprintln!("InitializeDelegation ix");
+    eprintln!(
+        "InitializeDelegation Ix:\n-> Representative: {:#?} \n-> Signer: {:#?}\n-> ProgramId: {:#?}",
+        representative,
+        signer.pubkey(),
+        config.program_id,
+    );
+    let ix = delegation_manager::instruction::InitializeDelegate;
 }
 
 #[tokio::main]
@@ -97,9 +105,7 @@ async fn main() -> Result<(), Error> {
     let (sub_command, sub_matches) = app_matches.subcommand();
     let sub_command = CommandName::from_str(sub_command).unwrap();
     let matches = sub_matches.unwrap();
-
     let mut wallet_manager = None;
-
     let config = Config::new(matches, &mut wallet_manager).await;
 
     process_command(&sub_command, matches, &config, wallet_manager).await;
@@ -115,7 +121,13 @@ async fn process_command<'a>(
 ) {
     match (sub_command, sub_matches) {
         (CommandName::InitializeDelegation, arg_matches) => {
-            initialize_delegation(config, wallet_manager).await
+            let recipient = pubkey_of_signer(arg_matches, "representative", &mut wallet_manager)
+                .unwrap()
+                .unwrap();
+            let (owner_signer, _) =
+                config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
+
+            command_initialize_delegation(config, owner_signer, recipient).await
         }
         _ => {
             todo!()
