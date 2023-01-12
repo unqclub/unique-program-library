@@ -1,3 +1,6 @@
+mod config;
+use config::Config;
+
 use clap::{
     crate_description, crate_name, crate_version, value_t, value_t_or_exit, App, AppSettings, Arg,
     ArgMatches, SubCommand,
@@ -15,11 +18,13 @@ use solana_clap_utils::{
     offline::{self, *},
     ArgConstant,
 };
+use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_program,
 };
+use std::{str::FromStr, sync::Arc};
 use strum_macros::{EnumString, IntoStaticStr};
 
 pub(crate) type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -78,19 +83,42 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
+async fn initialize_delegation(
+    config: &Config,
+    mut wallet_manager: Option<Arc<RemoteWalletManager>>,
+) {
+    eprintln!("InitializeDelegation ix");
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let app_matches = app().get_matches();
 
+    let (sub_command, sub_matches) = app_matches.subcommand();
+    let sub_command = CommandName::from_str(sub_command).unwrap();
+    let matches = sub_matches.unwrap();
+
+    let mut wallet_manager = None;
+
+    let config = Config::new(matches, &mut wallet_manager).await;
+
+    process_command(&sub_command, matches, &config, wallet_manager).await;
+
     Ok(())
 }
 
-// async fn process_command<'a>(
-//     sub_command: &CommandName,
-//     sub_matches: &ArgMatches<'_>,
-//     config: &Config<'a>,
-//     mut wallet_manager: Option<Arc<RemoteWalletManager>>,
-//     mut bulk_signers: Vec<Arc<dyn Signer>>,
-// ) -> CommandResult {
-//     todo!()
-// }
+async fn process_command<'a>(
+    sub_command: &CommandName,
+    sub_matches: &ArgMatches<'_>,
+    config: &Config,
+    mut wallet_manager: Option<Arc<RemoteWalletManager>>,
+) {
+    match (sub_command, sub_matches) {
+        (CommandName::InitializeDelegation, arg_matches) => {
+            initialize_delegation(config, wallet_manager).await
+        }
+        _ => {
+            todo!()
+        }
+    }
+}
