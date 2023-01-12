@@ -13,7 +13,7 @@ use clap::{
     ArgMatches, SubCommand,
 };
 
-use delegation_manager::AUTHORIZE_SEED;
+use delegation_manager::{get_delegation_address, AUTHORIZE_SEED};
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
     input_parsers::{pubkey_of_signer, pubkeys_of_multiple_signers, value_of},
@@ -101,21 +101,14 @@ async fn command_initialize_delegation(
     signer: Arc<dyn Signer>,
     representative: Pubkey,
 ) -> Result<(), Error> {
-    let delegation = Pubkey::find_program_address(
-        &[
-            AUTHORIZE_SEED,
-            signer.pubkey().as_ref(),
-            representative.as_ref(),
-        ],
-        &config.program_id,
-    )
-    .0;
-
     let instruction = Instruction {
         accounts: vec![
             AccountMeta::new(signer.pubkey(), true),
             AccountMeta::new_readonly(representative, false),
-            AccountMeta::new(delegation, false),
+            AccountMeta::new(
+                get_delegation_address(signer.pubkey().clone(), representative.clone()),
+                false,
+            ),
             AccountMeta::new(system_program::ID, false),
         ],
         program_id: config.program_id.clone(),
