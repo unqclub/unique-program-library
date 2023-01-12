@@ -32,6 +32,7 @@ pub enum CommandName {
     InitializeDelegation,
     ConfirmDelegation,
     CancelDelegation,
+    GetDelegations,
 }
 
 pub fn app<'a, 'b>() -> App<'a, 'b> {
@@ -153,7 +154,18 @@ async fn process_command<'a>(
             command_initialize_delegation(config, owner_signer, recipient).await?;
             Ok(())
         }
-        _ => {
+        (CommandName::ConfirmDelegation, arg_matches) => {
+            let (_owner_signer, _) =
+                config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
+            todo!()
+        }
+        (CommandName::CancelDelegation, arg_matches) => {
+            let (_owner_signer, _) =
+                config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
+            todo!()
+        }
+        (CommandName::GetDelegations, arg_matches) => {
+            let _pubkey = config.pubkey_or_default(arg_matches, "owner", &mut wallet_manager);
             todo!()
         }
     }
