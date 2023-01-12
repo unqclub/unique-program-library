@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-declare_id!("FG82Bh2yS5dcydGXk2PCkZb3sEZdcDTXPJhQQ83kDK1n");
+declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
+
+#[constant]
+pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
 /// Unique program library's Delegation Manager program.
 #[program]
 pub mod delegation_manager {
@@ -66,7 +69,7 @@ pub struct InitializeDelegation<'info> {
     pub representative: UncheckedAccount<'info>,
     #[account(
         init,
-        seeds = [b"authorize", master.key().as_ref(), representative.key().as_ref()],
+        seeds = [AUTHORIZE_SEED, master.key().as_ref(), representative.key().as_ref()],
         bump,
         space = 8 + 32 + 32 + 1,
         payer = master
