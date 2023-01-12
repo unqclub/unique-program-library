@@ -144,8 +144,8 @@ pub fn check_authorization(
     Ok(())
 }
 
-pub fn get_delegation_address(master: Pubkey, representative: Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&get_delegation_address_seeds(&master, &representative), &ID).0
+pub fn get_delegation_address(master: &Pubkey, representative: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&get_delegation_address_seeds(master, representative), &ID).0
 }
 
 pub fn get_delegation_address_seeds<'a>(

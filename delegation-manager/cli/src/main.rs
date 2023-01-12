@@ -106,7 +106,7 @@ async fn command_initialize_delegation(
             AccountMeta::new(signer.pubkey(), true),
             AccountMeta::new_readonly(representative, false),
             AccountMeta::new(
-                get_delegation_address(signer.pubkey().clone(), representative.clone()),
+                get_delegation_address(&signer.pubkey(), &representative),
                 false,
             ),
             AccountMeta::new(system_program::ID, false),
