@@ -1,12 +1,13 @@
 mod config;
-use anchor_client::anchor_lang::{solana_program, AnchorSerialize};
+use anchor_client::anchor_lang::{prelude::Account, solana_program, AnchorSerialize};
 use config::Config;
 
 use clap::{
     crate_description, crate_name, crate_version, App, AppSettings, Arg, ArgMatches, SubCommand,
 };
 
-use delegation_manager::get_delegation_address;
+use delegation_manager::{get_delegation_address, Delegation};
+use prettytable::ptable;
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
     input_parsers::pubkey_of_signer,
@@ -14,6 +15,7 @@ use solana_clap_utils::{
 };
 use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{
+    borsh::try_from_slice_unchecked,
     instruction::{AccountMeta, Instruction},
     message::Message,
     pubkey::Pubkey,
@@ -167,6 +169,22 @@ async fn command_initialize_delegation(
     Ok(())
 }
 
+async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(), Error> {
+    let delegation_accounts = config
+        .rpc_client
+        .get_program_accounts(&delegation_manager::ID)
+        .await?;
+
+    let parsed_accounts = delegation_accounts
+        .iter()
+        .map(|(_, account)| try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap())
+        .filter(|account| account.master == pubkey.clone())
+        .collect::<Vec<_>>();
+
+    eprint!("{:#?}", parsed_accounts);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let app_matches = app().get_matches();
@@ -210,8 +228,9 @@ async fn process_command<'a>(
             todo!()
         }
         (CommandName::GetDelegations, arg_matches) => {
-            let _pubkey = config.pubkey_or_default(arg_matches, "owner", &mut wallet_manager);
-            todo!()
+            let pubkey = config.pubkey_or_default(arg_matches, "owner", &mut wallet_manager)?;
+            command_get_delegations(config, &pubkey).await?;
+            Ok(())
         }
     }
 }

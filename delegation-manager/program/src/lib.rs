@@ -98,6 +98,7 @@ pub struct CancelDelegation<'info> {
 
 /// State account storing the delegation
 #[account]
+#[derive(Debug)]
 pub struct Delegation {
     /// The creator of the delegation
     pub master: Pubkey,

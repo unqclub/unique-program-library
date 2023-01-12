@@ -18,6 +18,7 @@ strum_macros = "0.24"
 tokio = "1.14"
 delegation-manager = { path = "../program/", features = ["cpi"]}
 anchor-client = "0.26.0"
+prettytable = "0.10.0"
 
 [[bin]]
 name = "upl-delegation-manager"
