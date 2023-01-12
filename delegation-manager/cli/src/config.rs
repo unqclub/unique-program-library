@@ -12,13 +12,14 @@ use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signer};
 use std::{process::exit, sync::Arc};
 
+#[allow(unused)]
 pub(crate) struct Config {
     pub(crate) default_signer: Option<Arc<dyn Signer>>,
     pub(crate) rpc_client: Arc<RpcClient>,
     pub(crate) websocket_url: String,
     pub(crate) output_format: OutputFormat,
     pub(crate) fee_payer: Option<Arc<dyn Signer>>,
-    pub(crate) sign_only: bool, // TODO
+    pub(crate) sign_only: bool,
     pub(crate) dump_transaction_message: bool,
     pub(crate) program_id: Pubkey,
     pub(crate) restrict_to_program_id: bool,

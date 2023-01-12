@@ -1,40 +1,24 @@
 mod config;
-use anchor_client::{
-    anchor_lang::{
-        prelude::{Account, Context},
-        solana_program, AnchorSerialize, Discriminator, InstructionData,
-    },
-    Cluster,
-};
+use anchor_client::anchor_lang::{solana_program, AnchorSerialize};
 use config::Config;
 
 use clap::{
-    crate_description, crate_name, crate_version, value_t, value_t_or_exit, App, AppSettings, Arg,
-    ArgMatches, SubCommand,
+    crate_description, crate_name, crate_version, App, AppSettings, Arg, ArgMatches, SubCommand,
 };
 
-use delegation_manager::{get_delegation_address, AUTHORIZE_SEED};
+use delegation_manager::get_delegation_address;
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
-    input_parsers::{pubkey_of_signer, pubkeys_of_multiple_signers, value_of},
-    input_validators::{
-        is_amount, is_amount_or_all, is_parsable, is_pubkey, is_url_or_moniker, is_valid_pubkey,
-        is_valid_signer,
-    },
-    keypair::signer_from_path,
-    memo::memo_arg,
-    nonce::*,
-    offline::{self, *},
-    ArgConstant,
+    input_parsers::pubkey_of_signer,
+    input_validators::{is_url_or_moniker, is_valid_pubkey},
 };
-use solana_client::rpc_client::SerializableTransaction;
 use solana_remote_wallet::remote_wallet::RemoteWalletManager;
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     message::Message,
     pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    signer, system_program,
+    signature::Signer,
+    system_program,
     transaction::Transaction,
 };
 use std::{str::FromStr, sync::Arc};
