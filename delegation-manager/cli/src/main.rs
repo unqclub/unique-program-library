@@ -29,9 +29,9 @@ pub(crate) type Error = Box<dyn std::error::Error + Send + Sync>;
 #[derive(Debug, Clone, Copy, PartialEq, EnumString, IntoStaticStr)]
 #[strum(serialize_all = "kebab-case")]
 pub enum CommandName {
-    InitializeDelegation,
-    ConfirmDelegation,
-    CancelDelegation,
+    Initialize,
+    Confirm,
+    Cancel,
     GetDelegations,
 }
 
@@ -65,7 +65,7 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
         )
         .arg(fee_payer_arg().global(true))
         .subcommand(
-            SubCommand::with_name(CommandName::InitializeDelegation.into())
+            SubCommand::with_name(CommandName::Initialize.into())
                 .about("Initialize Delegation")
                 .arg(
                     Arg::with_name("representative")
@@ -75,6 +75,51 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
                         .index(1)
                         .help(
                             "Specify the delegation representative. \
+                            This must be a valid public key.",
+                        ),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CommandName::Confirm.into())
+                .about("Confirm Delegation")
+                .arg(
+                    Arg::with_name("delegation")
+                        .value_name("DELEGATION")
+                        .validator(is_valid_pubkey)
+                        .takes_value(true)
+                        .index(1)
+                        .help(
+                            "Specify the delegation to confirm. \
+                            This must be a valid public key.",
+                        ),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CommandName::Cancel.into())
+                .about("Cancel Delegation")
+                .arg(
+                    Arg::with_name("delegation")
+                        .value_name("DELEGATION")
+                        .validator(is_valid_pubkey)
+                        .takes_value(true)
+                        .index(1)
+                        .help(
+                            "Specify the delegation to cancel. \
+                            This must be a valid public key.",
+                        ),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name(CommandName::GetDelegations.into())
+                .about("Get Delegations")
+                .arg(
+                    Arg::with_name("delegation")
+                        .value_name("DELEGATION")
+                        .validator(is_valid_pubkey)
+                        .takes_value(true)
+                        .index(1)
+                        .help(
+                            "Displays delegation for a given master. \
                             This must be a valid public key.",
                         ),
                 ),
@@ -144,7 +189,7 @@ async fn process_command<'a>(
     mut wallet_manager: Option<Arc<RemoteWalletManager>>,
 ) -> Result<(), Error> {
     match (sub_command, sub_matches) {
-        (CommandName::InitializeDelegation, arg_matches) => {
+        (CommandName::Initialize, arg_matches) => {
             let recipient = pubkey_of_signer(arg_matches, "representative", &mut wallet_manager)
                 .unwrap()
                 .unwrap();
@@ -154,12 +199,12 @@ async fn process_command<'a>(
             command_initialize_delegation(config, owner_signer, recipient).await?;
             Ok(())
         }
-        (CommandName::ConfirmDelegation, arg_matches) => {
+        (CommandName::Confirm, arg_matches) => {
             let (_owner_signer, _) =
                 config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
             todo!()
         }
-        (CommandName::CancelDelegation, arg_matches) => {
+        (CommandName::Cancel, arg_matches) => {
             let (_owner_signer, _) =
                 config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
             todo!()
