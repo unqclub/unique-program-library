@@ -222,7 +222,6 @@ async fn command_cancel_delegate(
     signer: Arc<dyn Signer>,
     delegation: Pubkey,
 ) -> Result<(), Error> {
-    // TODO: Fetch delegation account, and see if the signer matches master or representative.
     let mut accounts = vec![
         AccountMeta::new(delegation, false),
         AccountMeta::new_readonly(system_program::ID, false),
