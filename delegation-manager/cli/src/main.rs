@@ -1,5 +1,5 @@
 mod config;
-use anchor_client::anchor_lang::{prelude::Account, solana_program, AnchorSerialize};
+use anchor_client::anchor_lang::{solana_program, AnchorSerialize, Discriminator};
 use config::Config;
 
 use clap::{
@@ -7,6 +7,7 @@ use clap::{
 };
 
 use delegation_manager::{get_delegation_address, Delegation};
+use fastcmp::Compare;
 use prettytable::ptable;
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
@@ -177,7 +178,10 @@ async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(),
 
     let parsed_accounts = delegation_accounts
         .iter()
-        .map(|(_, account)| try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap())
+        .filter(|(_, account)| account.data[0..8].feq(&Delegation::discriminator()))
+        .map(|(address, account)| {
+            try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap()
+        })
         .filter(|account| account.master == pubkey.clone())
         .collect::<Vec<_>>();
 
