@@ -176,11 +176,20 @@ async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(),
         .get_program_accounts(&delegation_manager::ID)
         .await?;
 
+    let mut master_delegations = Vec::new();
+    let mut representative_delegations = Vec::new();
+
     let parsed_accounts = delegation_accounts
         .iter()
         .filter(|(_, account)| account.data[0..8].feq(&Delegation::discriminator()))
         .map(|(address, account)| {
-            try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap()
+            let account = try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap();
+            if &account.master == pubkey {
+                master_delegations.push(account.clone());
+            } else if &account.representative == pubkey {
+                representative_delegations.push(account.clone());
+            }
+            account
         })
         .filter(|account| account.master == pubkey.clone())
         .collect::<Vec<_>>();
