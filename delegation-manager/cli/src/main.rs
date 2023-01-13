@@ -8,7 +8,7 @@ use clap::{
 
 use delegation_manager::{get_delegation_address, Delegation};
 use fastcmp::Compare;
-use prettytable::ptable;
+use prettytable::{cell, ptable, row, table, Row, Table};
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
     input_parsers::pubkey_of_signer,
@@ -176,25 +176,27 @@ async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(),
         .get_program_accounts(&delegation_manager::ID)
         .await?;
 
-    let mut master_delegations = Vec::new();
-    let mut representative_delegations = Vec::new();
+    let mut table = Table::new();
+    table.set_titles(row![bic => cell!("Delegation"), cell!("Account")]);
 
-    let parsed_accounts = delegation_accounts
+    delegation_accounts
         .iter()
         .filter(|(_, account)| account.data[0..8].feq(&Delegation::discriminator()))
-        .map(|(address, account)| {
+        .for_each(|(address, account)| {
             let account = try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap();
-            if &account.master == pubkey {
-                master_delegations.push(account.clone());
-            } else if &account.representative == pubkey {
-                representative_delegations.push(account.clone());
+            if &account.master == pubkey || &account.representative == pubkey {
+                table.add_row(row![
+                    address,
+                    format!(
+                        "master: {}\nrepresentative: {}\nauthorised: {}",
+                        account.master, account.representative, account.authorised
+                    )
+                ]);
             }
-            account
-        })
-        .filter(|account| account.master == pubkey.clone())
-        .collect::<Vec<_>>();
+        });
 
-    eprint!("{:#?}", parsed_accounts);
+    table.printstd();
+
     Ok(())
 }
 
