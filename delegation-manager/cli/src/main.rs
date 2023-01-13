@@ -217,6 +217,60 @@ async fn command_confirm_delegate(
     Ok(())
 }
 
+async fn command_cancel_delegate(
+    config: &Config,
+    signer: Arc<dyn Signer>,
+    delegation: Pubkey,
+) -> Result<(), Error> {
+    // TODO: Fetch delegation account, and see if the signer matches master or representative.
+    let mut accounts = vec![
+        AccountMeta::new(delegation, false),
+        AccountMeta::new_readonly(system_program::ID, false),
+    ];
+
+    let delegation = config
+        .rpc_client
+        .get_program_accounts(&delegation_manager::ID)
+        .await?
+        .iter()
+        .find(|(pubkey, _)| pubkey == &delegation)
+        .map(|(_, account)| try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap())
+        .expect("Delegation account not found");
+
+    if signer.pubkey() == delegation.master {
+        accounts.push(AccountMeta::new(signer.pubkey(), true));
+        accounts.push(AccountMeta::new(delegation.representative, false));
+    } else if signer.pubkey() == delegation.representative {
+        accounts.push(AccountMeta::new(delegation.master, false));
+        accounts.push(AccountMeta::new(signer.pubkey(), true));
+    }
+
+    let instruction = Instruction {
+        accounts,
+        program_id: config.program_id.clone(),
+        data: sighash("global", "cancel_delegate").try_to_vec().unwrap(),
+    };
+
+    let message = Message::new_with_blockhash(
+        &[instruction],
+        Some(&signer.pubkey()),
+        &config.rpc_client.get_latest_blockhash().await.unwrap(),
+    );
+    let signature = signer.sign_message(&message.serialize());
+    let mut transaction = Transaction::new_unsigned(message);
+    transaction
+        .replace_signatures(&[(signer.pubkey(), signature)])
+        .unwrap();
+
+    config
+        .rpc_client
+        .send_and_confirm_transaction(&transaction)
+        .await
+        .unwrap();
+
+    Ok(())
+}
+
 async fn command_get_delegations(
     config: &Config,
     pubkey: &Pubkey,
@@ -307,9 +361,12 @@ async fn process_command<'a>(
             command_confirm_delegate(config, owner_signer, delegation).await
         }
         (CommandName::Cancel, arg_matches) => {
-            let (_owner_signer, _) =
+            let (owner_signer, _) =
                 config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
-            todo!()
+            let delegation = value_of::<Pubkey>(arg_matches, "delegation")
+                .expect("Expected Delegation address to be passed");
+
+            command_cancel_delegate(config, owner_signer, delegation).await
         }
         (CommandName::GetDelegations, arg_matches) => {
             let pubkey = config.pubkey_or_default(arg_matches, "owner", &mut wallet_manager)?;
