@@ -8,10 +8,10 @@ use clap::{
 
 use delegation_manager::{get_delegation_address, Delegation};
 use fastcmp::Compare;
-use prettytable::{cell, ptable, row, table, Row, Table};
+use prettytable::{cell, row, Table};
 use solana_clap_utils::{
     fee_payer::fee_payer_arg,
-    input_parsers::pubkey_of_signer,
+    input_parsers::{pubkey_of_signer, value_of},
     input_validators::{is_url_or_moniker, is_valid_pubkey},
 };
 use solana_remote_wallet::remote_wallet::RemoteWalletManager;
@@ -125,6 +125,18 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
                             "Displays delegation for a given master. \
                             This must be a valid public key.",
                         ),
+                )
+                .arg(
+                    Arg::with_name("delegation_option")
+                        .short("d")
+                        .long("delegation-option")
+                        .value_name("STRING")
+                        .takes_value(true)
+                        .global(false)
+                        .help(
+                            "Specify which Delegation accounts to fetch. \
+                            Can be: <all>(default), <master> or <repr>",
+                        ),
                 ),
         )
 }
@@ -170,7 +182,12 @@ async fn command_initialize_delegation(
     Ok(())
 }
 
-async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(), Error> {
+async fn command_get_delegations(
+    config: &Config,
+    pubkey: &Pubkey,
+    delegation_type: &str,
+    delegation: Option<Pubkey>,
+) -> Result<(), Error> {
     let delegation_accounts = config
         .rpc_client
         .get_program_accounts(&delegation_manager::ID)
@@ -179,21 +196,35 @@ async fn command_get_delegations(config: &Config, pubkey: &Pubkey) -> Result<(),
     let mut table = Table::new();
     table.set_titles(row![bic => cell!("Delegation"), cell!("Account")]);
 
-    delegation_accounts
-        .iter()
-        .filter(|(_, account)| account.data[0..8].feq(&Delegation::discriminator()))
-        .for_each(|(address, account)| {
-            let account = try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap();
-            if &account.master == pubkey || &account.representative == pubkey {
-                table.add_row(row![
+    if let Some(delegation) = delegation {
+        // delegation_type must be all
+        let parsed_delegation = delegation_accounts
+            .iter()
+            .find(|(pubkey, _)| pubkey == &delegation)
+            .map(|(_, account)| try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap())
+            .expect("Pubkey provided does not match any delegation");
+        try_add_row_for_delegation_type(
+            &mut table,
+            delegation_type,
+            &delegation,
+            &parsed_delegation,
+            pubkey,
+        );
+    } else {
+        delegation_accounts
+            .iter()
+            .filter(|(_, account)| account.data[0..8].feq(&Delegation::discriminator()))
+            .for_each(|(address, account)| {
+                let account = try_from_slice_unchecked::<Delegation>(&account.data[8..]).unwrap();
+                try_add_row_for_delegation_type(
+                    &mut table,
+                    delegation_type,
                     address,
-                    format!(
-                        "master: {}\nrepresentative: {}\nauthorised: {}",
-                        account.master, account.representative, account.authorised
-                    )
-                ]);
-            }
-        });
+                    &account,
+                    pubkey,
+                );
+            });
+    }
 
     table.printstd();
 
@@ -244,7 +275,22 @@ async fn process_command<'a>(
         }
         (CommandName::GetDelegations, arg_matches) => {
             let pubkey = config.pubkey_or_default(arg_matches, "owner", &mut wallet_manager)?;
-            command_get_delegations(config, &pubkey).await?;
+            let delegation = value_of::<Pubkey>(arg_matches, "delegation");
+
+            let delegation_type = if let Some(delegation_type) =
+                value_of::<String>(arg_matches, "delegation_option")
+            {
+                match delegation_type.as_str() {
+                    "all" => String::from("all"),
+                    "master" => String::from("master"),
+                    "repr" => String::from("repr"),
+                    _ => todo!(),
+                }
+            } else {
+                String::from("all")
+            };
+
+            command_get_delegations(config, &pubkey, delegation_type.as_str(), delegation).await?;
             Ok(())
         }
     }
@@ -256,4 +302,47 @@ pub fn sighash(namespace: &str, name: &str) -> [u8; 8] {
     let mut sighash = [0u8; 8];
     sighash.copy_from_slice(&solana_program::hash::hash(preimage.as_bytes()).to_bytes()[..8]);
     sighash
+}
+
+pub fn try_add_row_for_delegation_type(
+    table: &mut Table,
+    delegation_type: &str,
+    address: &Pubkey,
+    account: &Delegation,
+    pubkey: &Pubkey,
+) {
+    match delegation_type {
+        "all" => {
+            table.add_row(row![
+                address,
+                format!(
+                    "master: {}\nrepresentative: {}\nauthorised: {}",
+                    account.master, account.representative, account.authorised
+                )
+            ]);
+        }
+        "master" => {
+            if &account.master == pubkey {
+                table.add_row(row![
+                    address,
+                    format!(
+                        "master: {}\nrepresentative: {}\nauthorised: {}",
+                        account.master, account.representative, account.authorised
+                    )
+                ]);
+            }
+        }
+        "repr" => {
+            if &account.representative == pubkey {
+                table.add_row(row![
+                    address,
+                    format!(
+                        "master: {}\nrepresentative: {}\nauthorised: {}",
+                        account.master, account.representative, account.authorised
+                    )
+                ]);
+            }
+        }
+        _ => todo!(),
+    }
 }
