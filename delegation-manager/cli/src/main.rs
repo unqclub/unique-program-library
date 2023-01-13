@@ -141,7 +141,7 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
-async fn command_initialize_delegation(
+async fn command_initialize_delegate(
     config: &Config,
     signer: Arc<dyn Signer>,
     representative: Pubkey,
@@ -160,6 +160,41 @@ async fn command_initialize_delegation(
         data: sighash("global", "initialize_delegate")
             .try_to_vec()
             .unwrap(),
+    };
+
+    let message = Message::new_with_blockhash(
+        &[instruction],
+        Some(&signer.pubkey()),
+        &config.rpc_client.get_latest_blockhash().await.unwrap(),
+    );
+    let signature = signer.sign_message(&message.serialize());
+    let mut transaction = Transaction::new_unsigned(message);
+    transaction
+        .replace_signatures(&[(signer.pubkey(), signature)])
+        .unwrap();
+
+    config
+        .rpc_client
+        .send_and_confirm_transaction(&transaction)
+        .await
+        .unwrap();
+
+    Ok(())
+}
+
+async fn command_confirm_delegate(
+    config: &Config,
+    signer: Arc<dyn Signer>,
+    delegation: Pubkey,
+) -> Result<(), Error> {
+    let instruction = Instruction {
+        accounts: vec![
+            AccountMeta::new(signer.pubkey(), true),
+            AccountMeta::new(delegation, false),
+            AccountMeta::new(system_program::ID, false),
+        ],
+        program_id: config.program_id.clone(),
+        data: sighash("global", "confirm_delegate").try_to_vec().unwrap(),
     };
 
     let message = Message::new_with_blockhash(
@@ -260,13 +295,16 @@ async fn process_command<'a>(
             let (owner_signer, _) =
                 config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
 
-            command_initialize_delegation(config, owner_signer, recipient).await?;
+            command_initialize_delegate(config, owner_signer, recipient).await?;
             Ok(())
         }
         (CommandName::Confirm, arg_matches) => {
-            let (_owner_signer, _) =
+            let (owner_signer, _) =
                 config.signer_or_default(arg_matches, "owner", &mut wallet_manager);
-            todo!()
+            let delegation = value_of::<Pubkey>(arg_matches, "delegation")
+                .expect("You must provide delegation address");
+
+            command_confirm_delegate(config, owner_signer, delegation).await
         }
         (CommandName::Cancel, arg_matches) => {
             let (_owner_signer, _) =
@@ -313,13 +351,15 @@ pub fn try_add_row_for_delegation_type(
 ) {
     match delegation_type {
         "all" => {
-            table.add_row(row![
-                address,
-                format!(
-                    "master: {}\nrepresentative: {}\nauthorised: {}",
-                    account.master, account.representative, account.authorised
-                )
-            ]);
+            if &account.master == pubkey || &account.representative == pubkey {
+                table.add_row(row![
+                    address,
+                    format!(
+                        "master: {}\nrepresentative: {}\nauthorised: {}",
+                        account.master, account.representative, account.authorised
+                    )
+                ]);
+            }
         }
         "master" => {
             if &account.master == pubkey {
