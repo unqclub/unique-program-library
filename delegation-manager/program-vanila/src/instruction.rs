@@ -25,7 +25,7 @@ pub fn initialize_delegation(
     let accounts = vec![
         AccountMeta::new(*master, true),
         AccountMeta::new_readonly(*representative, false),
-        AccountMeta::new(delegation, false),
+        AccountMeta::new(delegation.0, false),
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
     ];
 
