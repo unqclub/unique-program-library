@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-declare_id!("3Q8TuzBaXYjJtKyxAgZwr3ehkUWh2sBAwmwyjjJYHePK");
+declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
+
+#[constant]
+pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
 /// Unique program library's Delegation Manager program.
 #[program]
 pub mod delegation_manager {
@@ -66,7 +69,7 @@ pub struct InitializeDelegation<'info> {
     pub representative: UncheckedAccount<'info>,
     #[account(
         init,
-        seeds = [b"authorize", master.key().as_ref(), representative.key().as_ref()],
+        seeds = [AUTHORIZE_SEED, master.key().as_ref(), representative.key().as_ref()],
         bump,
         space = 8 + 32 + 32 + 1,
         payer = master
@@ -95,6 +98,7 @@ pub struct CancelDelegation<'info> {
 
 /// State account storing the delegation
 #[account]
+#[derive(Debug)]
 pub struct Delegation {
     /// The creator of the delegation
     pub master: Pubkey,
@@ -139,4 +143,15 @@ pub fn check_authorization(
         require!(delegation.authorised, DelegationError::NotAuthorized);
     }
     Ok(())
+}
+
+pub fn get_delegation_address(master: &Pubkey, representative: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&get_delegation_address_seeds(master, representative), &ID).0
+}
+
+pub fn get_delegation_address_seeds<'a>(
+    master: &'a Pubkey,
+    representative: &'a Pubkey,
+) -> [&'a [u8]; 3] {
+    [AUTHORIZE_SEED, &master.as_ref(), &representative.as_ref()]
 }
