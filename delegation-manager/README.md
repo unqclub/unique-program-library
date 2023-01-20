@@ -6,7 +6,7 @@ An open-source, shared protocol for managing wallet delegation.
 
 Unique Delegation Manager is a toolset built for managing a "master-delegate" relationship between 1-to-many wallets. Protocols that implement it can allow safe execution of numerous actions for users without exposing their assets to any risks.
 
-### Background
+## Background
 
 One of the core problems that the web3 industry is facing is a constant compromise between user experience and self-custody. While security is paramount, we cannot onboard the next billion users without UX that is human friendly. UDM was created with a goal to address this problem.
 
