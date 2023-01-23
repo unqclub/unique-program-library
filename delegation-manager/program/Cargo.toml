@@ -1,6 +1,6 @@
 [package]
 name = "upl-delegation-manager"
-version = "0.1.0"
+version = "0.1.1"
 description = "Unique Account Delegation Manager Program"
 authors = ["Unique.VC <office@unique.vc>"]
 repository = "https://github.com/unqclub/unique-program-library"
