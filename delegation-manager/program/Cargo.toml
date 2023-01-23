@@ -1,5 +1,5 @@
 [package]
-name = "delegation-manager"
+name = "upl-delegation-manager"
 version = "0.1.0"
 description = "Unique Account Delegation Manager Program"
 authors = ["Unique.VC <office@unique.vc>"]
