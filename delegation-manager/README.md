@@ -28,9 +28,20 @@ That opens a number of use cases and possibilities, here are some examples:
 
 **User experience will become better with each app adopting the solution, so we encourage all developers to consider implementing it.**
 
-# The Delegation Account
+# Documentation
+## Components
 
-The delegation account is essentialy an on chain statement that confirms the representative has the authority to execute smart contract actions that are otherwise reserved for the master. It can also be used by projects to display asset ownership by proxy and give other logical priviledges.
+The UDM contains three main components:
+* UDM Solana program
+* `upl-delegation-manager` Rust SDK
+* `@unique/delegation-manager` Typescript SDK
+## Program State
+
+The UDM program utilizes one Program Derived Account:
+* Delegation
+### The Delegation Account
+
+The delegation account is essentialy an on chain statement which confirms that the representative has the authority to execute smart contract actions that are otherwise reserved for the master. This account can also be used by projects to display asset ownership by proxy and give other logical priviledges.
 
 ```rust
 #[account]
@@ -44,28 +55,21 @@ pub struct Delegation {
 }
 ```
 
-The master field is the pubkey of the one who initiated delegation account, representative field is the one who was invited to represent the master, and the authorised flag is set to **true** once the representative accepts the delegation.
+The `master` field is the pubkey of the one who initiated delegation account. The `representative` field is the one who was invited to represent the master, and the `authorised` flag is set to **true** once the representative accepts the delegation.
 
-# Integration
+## Integration
 
-After the Unique Delegation Manager platform, CLI or third party app was used to create the delegation, all that is required for projects to implement it is to add a single statement from the delegation-manager crate to their smart contract:
+Once the Unique Delegation Manager platform, CLI or third party app was used to create the delegation, all that is required for projects to implement the UDM functionality is to add a single statement from the `delegation-manager` crate into their smart contract:
 
 ```rust
 check_authorization(master_info, representative_info, delegation_info)?;
 ```
 
-This checks whether or not a account was authorised by master to represent it.
+This function checks whether or not an account was authorised by master to represent it.
 
-# Example
+## Example usage
 
-This program shows an example of using the Unique Delegation Manager in a smart contract.
-It contains a single instruction, 'increment_counter'. The first time it's invoked it creates
-a Counter PDA account, and sets its authority to the one who signed the transaction. Each consecutive
-time it's invoked, it checks if its invoked by the one who created the Counter account. If the signer
-isn't the one who created it, it checks if the authoriti was delegated to the signer of the transaction,
-so that he can increment the counter in the name of the one who created it. If the Delegation account
-exists, the payer was authorised to represent the original authority of the Counter, an he has accepted
-the Delegation, the counter is incremented.
+This program shows an example of using the Unique Delegation Manager in another Solana program. It contains a single instruction, 'increment_counter'. The first time it's invoked it creates a Counter PDA account, and sets its authority to the one who signed the transaction. Each consecutive time it's invoked, it checks if its invoked by the one who created the Counter account. If the signer isn't the one who created it, it checks if the authority was delegated to the signer of the transaction, so that he can increment the counter in the name of the one who created it. If the Delegation account exists, the payer was authorised to represent the original authority of the Counter, and he has accepted the Delegation, the counter is incremented.
 
 ```rust
 #[program]
@@ -117,3 +121,8 @@ pub struct Counter {
 }
 
 ```
+# License
+
+Unique Delegation Manager is licensed under the GNU Affero General Public License v3.0.
+
+In short, this means that any changes to this code must be made open source and available under the AGPL-v3.0 license, even if only used privately.
