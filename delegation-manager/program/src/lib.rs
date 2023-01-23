@@ -5,7 +5,7 @@
 //! actions for users without exposing their assets to any risks.
 
 use anchor_lang::prelude::*;
-declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
+declare_id!("UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8");
 
 #[constant]
 pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
