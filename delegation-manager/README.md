@@ -33,7 +33,7 @@ That opens a number of use cases and possibilities, here are some examples:
 
 The UDM contains three main components:
 * UDM Solana program
-* `unique-delegation-manager` Rust SDK
+* `upl-delegation-manager` Rust SDK
 * `@unique/delegation-manager` Typescript SDK
 ## Program State
 
