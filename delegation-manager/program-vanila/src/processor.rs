@@ -25,14 +25,14 @@ impl Processor {
         let representative_info = next_account_info(account_info_iter)?;
         let delegation_info = next_account_info(account_info_iter)?;
 
-        let (delegation_address, bump) =
+        let (delegation_address, _) =
             get_delegation_address(master_info.key, representative_info.key);
 
         if !cmp_pubkeys(delegation_info.key, &delegation_address) {
             return Err(DelegationError::WrongSigner.into());
         }
 
-        let system_program = next_account_info(account_info_iter)?;
+        // let system_program = next_account_info(account_info_iter)?;
 
         let delegation = Delegation::new_serialized(*master_info.key, *representative_info.key);
         let delegation_size = delegation.len();

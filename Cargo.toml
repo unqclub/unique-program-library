@@ -3,7 +3,8 @@ members = [
     "delegation-manager/program",
     "delegation-manager/example",
     "delegation-manager/cli",
-    "delegation-manager/program-vanila"
+    "delegation-manager/cli-vanila",
+    "delegation-manager/program-vanila",
 ]
 
 [profile.release]

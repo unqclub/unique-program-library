@@ -1,9 +1,13 @@
 [package]
-name = "program-vanila"
+name = "delegation-manager-vanila"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "delegation_manager_vanila"
 
 [dependencies]
 solana-program = "1.14.10"

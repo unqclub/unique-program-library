@@ -12,7 +12,7 @@ use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
 };
 
-solana_program::declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
+solana_program::declare_id!("BVZtShyAQsxhy1uQqYFemi8NHdN8QThr8Mv5RjbW8vvQ");
 
 pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
 
