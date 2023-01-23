@@ -1,3 +1,9 @@
+//! # Unique Delegation Manager
+//!
+//! Unique Delegation Manager is a toolset built for managing a "master-delegate" relationship
+//! between 1-to-many wallets. Protocols that implement it can allow safe execution of numerous
+//! actions for users without exposing their assets to any risks.
+
 use anchor_lang::prelude::*;
 declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
 
