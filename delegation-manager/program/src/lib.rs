@@ -1,5 +1,11 @@
+//! # Unique Delegation Manager
+//!
+//! Unique Delegation Manager is a toolset built for managing a "master-delegate" relationship
+//! between 1-to-many wallets. Protocols that implement it can allow safe execution of numerous
+//! actions for users without exposing their assets to any risks.
+
 use anchor_lang::prelude::*;
-declare_id!("5mcBrxdfAZZkBfThVY6HwkmZSbAhDNhNdxUiHqyhqZCA");
+declare_id!("UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8");
 
 #[constant]
 pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
@@ -8,7 +14,8 @@ pub const AUTHORIZE_SEED: &'static [u8] = b"authorize";
 pub mod delegation_manager {
     use super::*;
 
-    /// Initializes delegation account
+    /// Initializes delegate ix is used by a wallet to initialize the Delegation
+    /// account.
     pub fn initialize_delegate(ctx: Context<InitializeDelegation>) -> Result<()> {
         let delegation = &mut ctx.accounts.delegation;
         delegation.master = ctx.accounts.master.key();
@@ -17,7 +24,8 @@ pub mod delegation_manager {
         Ok(())
     }
 
-    /// Confirms delegation
+    /// Confirm delegate ix is used by the representative to confirm the delegation
+    /// by setting the authorised flag to true.
     pub fn confirm_delegate(ctx: Context<ConfirmDelegation>) -> Result<()> {
         let delegation = &mut ctx.accounts.delegation;
         require!(
@@ -29,7 +37,9 @@ pub mod delegation_manager {
         Ok(())
     }
 
-    /// Cancels delegation
+    /// Cancel delegate is used to revoke the authorisation given to the representative by
+    /// erasing the Delegation account. It can be invoked by both master and representative,
+    /// but the rent SOLs go to the master account.
     pub fn cancel_delegate<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, CancelDelegation<'info>>,
     ) -> Result<()> {
@@ -64,6 +74,7 @@ pub mod delegation_manager {
 #[derive(Accounts)]
 pub struct InitializeDelegation<'info> {
     #[account(mut)]
+    /// The one invoking the instruction to create Delegation
     pub master: Signer<'info>,
     ///CHECK: can be any account which can sign confirmation
     pub representative: UncheckedAccount<'info>,
@@ -74,6 +85,7 @@ pub struct InitializeDelegation<'info> {
         space = 8 + 32 + 32 + 1,
         payer = master
     )]
+    /// The Delegation PDA account derived from the master and representativ pubkeys
     pub delegation: Box<Account<'info, Delegation>>,
     pub system_program: Program<'info, System>,
 }
