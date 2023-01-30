@@ -80,19 +80,22 @@ pub mod civic_example {
 pub struct IncrementCounter<'info> {
     #[account(
         init_if_needed,
-        seeds = [b"counter-state"],
+        seeds = [b"counter-state", authority.key().as_ref()],
         bump,
         payer = payer,
         space = 8 + 4 + 32,
     )]
     pub counter: Box<Account<'info, Counter>>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(mut)]
     ///CHECK: Checked by check_authorization fn
     pub authority: UncheckedAccount<'info>,
 
     #[account()]
+    ///CHECK
     pub gateway_token: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
