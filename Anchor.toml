@@ -1,8 +1,8 @@
 [workspace]
 members = [
   "delegation-manager/program",
-  "delegation-manager/example",
-  "delegation-manager/civic_example"
+  "delegation-manager/examples/counter_example",
+  "delegation-manager/examples/civic_example"
 ]
 
 [features]
@@ -11,7 +11,8 @@ skip-lint = false
 
 [programs.localnet]
 delegation_manager = "UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8"
-example = "972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a"
+counter_example = "972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a"
+civic_example = "C5rrYvVXSKEA8GRMauhyoeg1h57VVYUN3FuwDF6ZWNZJ"
 
 [registry]
 url = "https://api.apr.dev"

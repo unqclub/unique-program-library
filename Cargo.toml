@@ -1,9 +1,9 @@
 [workspace]
 members = [
     "delegation-manager/program",
-    "delegation-manager/example",
+    "delegation-manager/examples/counter_example",
+    "delegation-manager/examples/civic_example",
     "delegation-manager/cli",
-    "delegation-manager/civic_example"
 ]
 
 [profile.release]

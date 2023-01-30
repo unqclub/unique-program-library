@@ -1,12 +1,12 @@
 [package]
-name = "civic_example"
+name = "counter_example"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "civic_example"
+name = "counter_example"
 
 [features]
 no-entrypoint = []
@@ -17,5 +17,4 @@ default = []
 
 [dependencies]
 anchor-lang = {version = "0.26.0", features = ["init-if-needed"]}
-upl-delegation-manager = { path = "../program/", features = ["cpi"]}
-solana-gateway = "0.2.2"
+upl-delegation-manager = { path = "../../program/", features = ["cpi"]}
