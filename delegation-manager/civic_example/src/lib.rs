@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use delegation_manager::check_authorization;
 use solana_gateway::Gateway;
 
-declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
+declare_id!("C5rrYvVXSKEA8GRMauhyoeg1h57VVYUN3FuwDF6ZWNZJ");
 
 #[constant]
 pub const GATEKEEPER_NON_US: &str = "b1gz9sD7TeH6cagodm4zTcAx6LkZ56Etisvgr6jGFQb";

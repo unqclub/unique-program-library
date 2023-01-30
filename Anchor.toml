@@ -1,7 +1,8 @@
 [workspace]
 members = [
   "delegation-manager/program",
-  "delegation-manager/example"
+  "delegation-manager/example",
+  "delegation-manager/civic_example"
 ]
 
 [features]
