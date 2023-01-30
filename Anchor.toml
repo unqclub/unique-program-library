@@ -10,9 +10,9 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-delegation_manager = "UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8"
-counter_example = "972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a"
-civic_example = "C5rrYvVXSKEA8GRMauhyoeg1h57VVYUN3FuwDF6ZWNZJ"
+delegation_manager = "6rBfJockUbwDjpJaa755PwdtNNGY5ZubVk9QgjuqDUDG"
+counter_example = "GUQeLoyQs7YjPrK2gzbJ3QWrGygR4bKmpwSQ2eMv6cYj"
+civic_example = "9XMVrhZ7r6MxZ6fgHBL8rWbpRTAxtoK4EhvGBmjqj9ux"
 
 [registry]
 url = "https://api.apr.dev"

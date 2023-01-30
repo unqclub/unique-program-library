@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
+declare_id!("GUQeLoyQs7YjPrK2gzbJ3QWrGygR4bKmpwSQ2eMv6cYj");
 
 /// This program shows an example of using the Unique Delegation Manager in a smart contract.
 /// It contains a single instruction, 'increment_counter'. The first time it's invoked it creates
