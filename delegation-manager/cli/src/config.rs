@@ -134,7 +134,7 @@ impl Config {
         let sign_only = matches.is_present(SIGN_ONLY_ARG.name);
         let dump_transaction_message = matches.is_present(DUMP_TRANSACTION_MESSAGE.name);
 
-        let default_program_id = delegation_manager::ID;
+        let default_program_id = upl_delegation_manager::ID;
         let (program_id, restrict_to_program_id) =
             if let Some(program_id) = value_of(matches, "program_id") {
                 (program_id, true)

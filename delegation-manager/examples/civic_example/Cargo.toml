@@ -17,5 +17,5 @@ default = []
 
 [dependencies]
 anchor-lang = {version = "0.26.0", features = ["init-if-needed"]}
-upl-delegation-manager = { path = "../../program/", features = ["cpi"]}
+upl-delegation-manager = { path = "../../program/", features = ["no-entrypoint"]}
 solana-gateway = "0.2.2"

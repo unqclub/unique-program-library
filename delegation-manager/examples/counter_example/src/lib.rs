@@ -12,7 +12,7 @@ declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
 /// the Delegation, the counter is incremented.
 #[program]
 pub mod counter_example {
-    use delegation_manager::check_authorization;
+    use upl_delegation_manager::check_authorization;
 
     use super::*;
 

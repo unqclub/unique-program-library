@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use delegation_manager::check_authorization;
 use solana_gateway::Gateway;
+use upl_delegation_manager::check_authorization;
 
 declare_id!("C5rrYvVXSKEA8GRMauhyoeg1h57VVYUN3FuwDF6ZWNZJ");
 
