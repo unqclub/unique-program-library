@@ -8,14 +8,14 @@ import {
 } from "@solana/web3.js";
 import { assert } from "chai";
 import { DelegationManager as DelegateManager } from "../target/types/delegation_manager";
-import { Example } from "../target/types/example";
+import { CounterExample as Example } from "../target/types/counter_example";
 
 describe("delegation-manager", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = anchor.workspace
     .DelegationManager as Program<DelegateManager>;
-  const example = anchor.workspace.Example as Program<Example>;
+  const example = anchor.workspace.CounterExample as Program<Example>;
   const connection = anchor.getProvider().connection;
 
   it("Initialize, confirm, cancel by authority", async () => {

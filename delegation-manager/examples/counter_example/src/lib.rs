@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
+declare_id!("GUQeLoyQs7YjPrK2gzbJ3QWrGygR4bKmpwSQ2eMv6cYj");
 
 /// This program shows an example of using the Unique Delegation Manager in a smart contract.
 /// It contains a single instruction, 'increment_counter'. The first time it's invoked it creates
@@ -11,8 +11,8 @@ declare_id!("972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a");
 /// exists, the payer was authorised to represent the original authority of the Counter, an he has accepted
 /// the Delegation, the counter is incremented.
 #[program]
-pub mod example {
-    use delegation_manager::check_authorization;
+pub mod counter_example {
+    use upl_delegation_manager::check_authorization;
 
     use super::*;
 
