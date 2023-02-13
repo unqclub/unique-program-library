@@ -9,7 +9,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-delegation_manager = "UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8"
+upl_delegation_manager = "UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8"
 example = "972QDtrTG4KvzEVt6fvxNmXQpuRyFhnpcR4Ln9Y41w5a"
 
 [registry]

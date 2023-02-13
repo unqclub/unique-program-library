@@ -6,7 +6,6 @@ use clap::{
     crate_description, crate_name, crate_version, App, AppSettings, Arg, ArgMatches, SubCommand,
 };
 
-use delegation_manager::{get_delegation_address, Delegation};
 use fastcmp::Compare;
 use prettytable::{cell, row, Table};
 use solana_clap_utils::{
@@ -26,6 +25,7 @@ use solana_sdk::{
 };
 use std::{str::FromStr, sync::Arc};
 use strum_macros::{EnumString, IntoStaticStr};
+use upl_delegation_manager::{get_delegation_address, Delegation};
 
 pub(crate) type Error = Box<dyn std::error::Error + Send + Sync>;
 
@@ -229,7 +229,7 @@ async fn command_cancel_delegate(
 
     let delegation = config
         .rpc_client
-        .get_program_accounts(&delegation_manager::ID)
+        .get_program_accounts(&upl_delegation_manager::ID)
         .await?
         .iter()
         .find(|(pubkey, _)| pubkey == &delegation)
@@ -278,7 +278,7 @@ async fn command_get_delegations(
 ) -> Result<(), Error> {
     let delegation_accounts = config
         .rpc_client
-        .get_program_accounts(&delegation_manager::ID)
+        .get_program_accounts(&upl_delegation_manager::ID)
         .await?;
 
     let mut table = Table::new();
