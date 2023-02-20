@@ -29,16 +29,21 @@ That opens a number of use cases and possibilities, here are some examples:
 **User experience will become better with each app adopting the solution, so we encourage all developers to consider implementing it.**
 
 # Documentation
+
 ## Components
 
 The UDM contains three main components:
-* UDM Solana program
-* `upl-delegation-manager` Rust SDK
-* `@unique/delegation-manager` Typescript SDK
+
+- UDM Solana program
+- `upl-delegation-manager` Rust SDK
+- `@unique/delegation-manager` Typescript SDK
+
 ## Program State
 
 The UDM program utilizes one Program Derived Account:
-* Delegation
+
+- Delegation
+
 ### The Delegation Account
 
 The delegation account is essentialy an on chain statement which confirms that the representative has the authority to execute smart contract actions that are otherwise reserved for the master. This account can also be used by projects to display asset ownership by proxy and give other logical priviledges.
@@ -121,6 +126,11 @@ pub struct Counter {
 }
 
 ```
+
+# Mainnet address
+
+The version of the program compiled from the source code found in this repository is deployed on mainnet @ `UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8`
+
 # License
 
 Unique Delegation Manager is licensed under the GNU Affero General Public License v3.0.
