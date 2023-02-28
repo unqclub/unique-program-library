@@ -13,6 +13,7 @@ spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 borsh="0.9.3"
 shank = "0.0.12"
 shank_macro = "0.0.12"
+itertools = "0.10.5"
 shank_macro_impl = "0.0.12"
 [dev-dependencies]
 itertools = "0.10.5"

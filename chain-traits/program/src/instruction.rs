@@ -26,7 +26,7 @@ pub enum TraitInstruction {
         desc = "Metadata account of collection NFT or NFT from collection"
     )]
     #[account(4, name = "system_program")]
-    CreateTraitConfig { data: CreateTraitConfigArgs },
+    CreateTraitConfig { data: Vec<CreateTraitConfigArgs> },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
@@ -36,7 +36,7 @@ pub struct CreateTraitConfigArgs {
     pub action: TraitAction,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Debug, Clone, PartialEq)]
 pub enum TraitAction {
     Add,
     Remove,
