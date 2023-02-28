@@ -8,6 +8,9 @@ use crate::instruction::TraitInstruction;
 mod create_trait_config;
 use create_trait_config::*;
 
+mod create_trait;
+use create_trait::*;
+
 pub fn process_instruction<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -19,5 +22,6 @@ pub fn process_instruction<'a>(
         TraitInstruction::CreateTraitConfig { data } => {
             create_trait_config(program_id, accounts, data)
         }
+        TraitInstruction::CreateTrait { data } => create_trait(program_id, accounts, data),
     }
 }
