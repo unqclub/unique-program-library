@@ -26,20 +26,34 @@ pub enum TraitInstruction {
         desc = "Metadata account of collection NFT or NFT from collection"
     )]
     #[account(4, name = "system_program")]
-    CreateTraitConfig {
-        data: Vec<CreateTraitConfigArgs>,
-    },
+    CreateTraitConfig { data: Vec<CreateTraitConfigArgs> },
 
-    #[account(0, name="nft_mint", desc="Mint of nft")]
-    #[account(1, name="nft_metadata", desc="Metadata of nft")]
-    #[account(2, name="trait_config_account", desc="Account used for storing trait config on-chain")]
-    #[account(3, name="trait_account", desc="Account used for storing traits for nft on-chain")]
-    #[account(4, name="payer", desc="Signer of transaction (update authority or holder in case of mint)", signer)]
-    #[account(5, name="system_program")]
-    #[account(6, name="instruction_sysvar"), opt, desc="Sysvar defining instruction of same transaction"]
-    CreateTrait {
-        data: Vec<CreateTraitArgs>,
-    },
+    #[account(0, name = "nft_mint", desc = "Mint of nft")]
+    #[account(1, name = "nft_metadata", desc = "Metadata of nft")]
+    #[account(
+        2,
+        name = "trait_config_account",
+        desc = "Account used for storing trait config on-chain"
+    )]
+    #[account(
+        3,
+        name = "trait_account",
+        desc = "Account used for storing traits for nft on-chain"
+    )]
+    #[account(
+        4,
+        name = "payer",
+        desc = "Signer of transaction (update authority or holder in case of mint)",
+        signer
+    )]
+    #[account(5, name = "system_program")]
+    #[account(
+        6,
+        name = "instruction_sysvar",
+        opt,
+        desc = "Sysvar defining instruction of same transaction"
+    )]
+    CreateTrait { data: Vec<CreateTraitArgs> },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
@@ -56,7 +70,4 @@ pub enum TraitAction {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
-pub struct CreateTraitArgs {
-    pub name: String;
-    pub value: String;
-}
+pub struct CreateTraitArgs {}

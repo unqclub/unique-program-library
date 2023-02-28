@@ -5,4 +5,8 @@ pub enum TraitError {
     InvalidCollection,
     #[error("Signer is not update authority of collection")]
     NotUpdateAuthority,
+    #[error("Trait config not initialized")]
+    TraitConfigNotInitialized,
+    #[error("You don't have authority to store traits on chain!")]
+    WrongAuthorityToCreateTrait,
 }
