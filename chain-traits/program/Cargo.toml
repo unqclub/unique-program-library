@@ -1,0 +1,16 @@
+[package]
+name = "on-chain-traits"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+solana-program = "1.14.2"
+thiserror = "1.0"
+mpl-token-metadata = {version="1.8.5",features=["no-entrypoint"]}
+spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
+borsh="0.9.3"
+shank = "0.0.12"
+[dev-dependencies]
+itertools = "0.10.5"
