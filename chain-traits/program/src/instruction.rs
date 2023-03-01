@@ -70,4 +70,7 @@ pub enum TraitAction {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
-pub struct CreateTraitArgs {}
+pub struct CreateTraitArgs {
+    pub name: String,
+    pub value: String,
+}

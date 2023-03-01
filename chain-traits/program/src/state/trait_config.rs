@@ -16,7 +16,7 @@ pub struct TraitConfig {
 }
 
 impl TraitConfig {
-    pub const LEN: usize = 32 + 32;
+    pub const LEN: usize = 32 + 32 + 8;
 
     pub fn traits_to_map(
         traits: Vec<CreateTraitConfigArgs>,

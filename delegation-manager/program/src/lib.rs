@@ -4,8 +4,6 @@
 //! between 1-to-many wallets. Protocols that implement it can allow safe execution of numerous
 //! actions for users without exposing their assets to any risks.
 
-use std::collections::HashMap;
-
 use anchor_lang::prelude::*;
 declare_id!("UPLdquGEBVnVK5TmccSue5gyPkxSRT4poezHShoEzg8");
 
@@ -120,8 +118,6 @@ pub struct Delegation {
     pub representative: Pubkey,
     /// Confirmation flag
     pub authorised: bool,
-
-    pub test: HashMap<String, String>,
 }
 
 /// Program errors
@@ -150,15 +146,11 @@ pub fn check_authorization(
     if master.key() != representative.key() {
         let delegation_info = delegation_option.expect("Missing Delegation Account");
         require_keys_eq!(*delegation_info.owner, ID);
-        let mut delegation = Box::new(
+        let delegation = Box::new(
             Account::<Delegation>::try_from(delegation_info)
                 .expect("Wrong account passed as Delegation account"),
         );
 
-        delegation
-            .test
-            .insert("Milica".to_string(), "Milica2".to_owned());
-        let test = delegation.test.get(&"Milica".to_string());
         require_keys_eq!(master.key(), delegation.master);
         require_keys_eq!(representative.key(), delegation.representative);
         require!(delegation.authorised, DelegationError::NotAuthorized);
