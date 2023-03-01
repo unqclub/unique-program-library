@@ -6,18 +6,23 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-solana-program = "1.14.2"
-thiserror = "1.0"
-mpl-token-metadata = {version="1.8.5",features=["no-entrypoint"]}
-spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
-borsh="0.9.3"
 shank = "0.0.12"
-itertools = "0.10.5"
+solana-program = "1.14.12"
+thiserror = "1.0.35"
+borsh = "0.9.3"
+num-derive = "0.3"
+num-traits = "0.2"
+spl-token =  "3.5"
+spl-associated-token-account = "1.1.2"
+mpl-token-metadata = {version="1.8.5",features=["no-entrypoint"]}
 
 [features]
-no-entrypoint=[]
-test-bpf=[]
+test-bpf = []
+no-entrypoint = []
 
+[dev-dependencies]
+solana-program-test = "1.10.41"
+solana-sdk = "1.14.12"
 [lib]
 crate-type = ["cdylib", "lib"]
 path = "src/lib.rs"
