@@ -59,15 +59,28 @@ pub fn create_trait_config<'a>(
         TraitError::NotUpdateAuthority
     );
 
+    let (trait_config_account_address, trait_config_account_bump) = Pubkey::find_program_address(
+        &TraitConfig::get_trait_config_seeds(collection.key),
+        program_id,
+    );
+
+    assert!(
+        trait_config_account_address == *trait_config.key,
+        "{}",
+        TraitError::InvalidAccountSeeds
+    );
     if trait_config.data_is_empty() {
         let trait_map: HashMap<String, Vec<AvailableTrait>> = TraitConfig::traits_to_map(data);
 
         let trait_map_len = trait_map.try_to_vec().unwrap().len();
-
         create_program_account(
             update_autority,
             trait_config,
-            None,
+            Some(&[
+                b"trait-config",
+                collection.key.as_ref(),
+                &[trait_config_account_bump],
+            ]),
             program_id,
             (TraitConfig::LEN + trait_map_len) as u64,
             system_program,

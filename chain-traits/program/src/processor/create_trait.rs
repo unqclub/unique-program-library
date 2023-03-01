@@ -105,12 +105,27 @@ pub fn create_trait<'a>(
         }
         trait_map.insert(trait_data.name.clone(), trait_data.value.clone());
     }
+    let (trait_account_address, trait_account_bump) = Pubkey::find_program_address(
+        &TraitData::get_trait_data_seeds(nft_mint_info.key, trait_config_account_info.key),
+        program_id,
+    );
+
+    assert!(
+        trait_account_address == *trait_account_info.key,
+        "{}",
+        TraitError::InvalidAccountSeeds
+    );
 
     if trait_account_info.data_is_empty() {
         create_program_account(
             payer,
             trait_account_info,
-            None,
+            Some(&[
+                b"trait-data",
+                nft_mint_info.key.as_ref(),
+                trait_config_account_info.key.as_ref(),
+                &[trait_account_bump],
+            ]),
             program_id,
             (TraitData::LEN + trait_map.try_to_vec().unwrap().len()) as u64,
             system_program,

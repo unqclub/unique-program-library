@@ -12,4 +12,11 @@ pub struct TraitData {
 }
 impl TraitData {
     pub const LEN: usize = 32 + 8;
+
+    pub fn get_trait_data_seeds<'a>(
+        nft_mint: &'a Pubkey,
+        trait_config: &'a Pubkey,
+    ) -> [&'a [u8]; 3] {
+        [b"trait-data", nft_mint.as_ref(), trait_config.as_ref()]
+    }
 }

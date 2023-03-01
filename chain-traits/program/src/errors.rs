@@ -12,6 +12,8 @@ pub enum TraitError {
     WrongAuthorityToCreateTrait,
     #[error("Trait does not exist in trait config")]
     TraitDoesNotExist,
+    #[error("Invalid account seeds")]
+    InvalidAccountSeeds,
 }
 impl From<TraitError> for ProgramError {
     fn from(e: TraitError) -> Self {

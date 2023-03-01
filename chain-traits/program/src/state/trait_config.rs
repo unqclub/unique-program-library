@@ -48,6 +48,9 @@ impl TraitConfig {
             })
             .collect()
     }
+    pub fn get_trait_config_seeds<'a>(collection: &'a Pubkey) -> [&'a [u8]; 2] {
+        [b"trait-config", collection.as_ref()]
+    }
 }
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
