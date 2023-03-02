@@ -42,7 +42,7 @@ pub fn process_create_trait<'a>(
     let instruction_index = load_current_index_checked(instructon_sysvar)?;
 
     assert!(
-        !trait_account_info.data_is_empty(),
+        !trait_config_account_info.data_is_empty(),
         "{}",
         TraitError::TraitConfigNotInitialized
     );

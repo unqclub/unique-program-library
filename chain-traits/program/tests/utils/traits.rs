@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 
-use chain_traits::instruction::create_trait_config;
+use chain_traits::instruction::{create_trait, create_trait_config, CreateTraitArgs};
 use chain_traits::state::TraitConfig;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::pubkey::Pubkey;
@@ -44,4 +44,30 @@ pub async fn get_trait_config(
         .unwrap();
 
     try_from_slice_unchecked::<TraitConfig>(&account.data.borrow()).unwrap()
+}
+
+pub async fn store_nft_trait(
+    context: &mut ProgramTestContext,
+    nft_mint: &Pubkey,
+    nft_metadata: &Pubkey,
+    trait_config: &Pubkey,
+    traits: Vec<CreateTraitArgs>,
+) -> Result<(), BanksClientError> {
+    let store_trait_ix = create_trait(
+        &chain_traits::id(),
+        nft_mint,
+        nft_metadata,
+        trait_config,
+        &context.payer.pubkey(),
+        traits,
+    );
+
+    let tx = Transaction::new_signed_with_payer(
+        &[store_trait_ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
 }

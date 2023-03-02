@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use chain_traits::{instruction::CreateTraitConfigArgs, state::AvailableTrait};
+use chain_traits::{
+    instruction::{CreateTraitArgs, CreateTraitConfigArgs},
+    state::AvailableTrait,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -51,27 +54,27 @@ impl UriMetadata {
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
                 name: "Clothes".to_string(),
-                values: vec!["Banana Hazmat".to_string()],
+                values: vec!["Nice Overalls".to_string()],
             },
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
                 name: "Eyewear".to_string(),
-                values: vec!["Windsors (blackout)".to_string()],
+                values: vec!["Nouns".to_string()],
             },
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
                 name: "Face".to_string(),
-                values: vec!["Blasé".to_string()],
+                values: vec!["Smirk".to_string()],
             },
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
                 name: "Fur".to_string(),
-                values: vec![],
+                values: vec!["Eggnog".to_string()],
             },
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
                 name: "Head".to_string(),
-                values: vec!["Pyrite Crown".to_string()],
+                values: vec!["Spiky Hair".to_string()],
             },
             CreateTraitConfigArgs {
                 action: chain_traits::instruction::TraitAction::Add,
@@ -100,5 +103,15 @@ impl UriMetadata {
         });
 
         trait_map
+    }
+
+    pub fn map_to_args(&self) -> Vec<CreateTraitArgs> {
+        self.attributes
+            .iter()
+            .map(|attr| CreateTraitArgs {
+                name: attr.trait_type.clone(),
+                value: attr.value.clone(),
+            })
+            .collect()
     }
 }

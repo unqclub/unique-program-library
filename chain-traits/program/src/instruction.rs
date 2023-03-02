@@ -50,12 +50,14 @@ pub enum TraitInstruction {
     )]
     #[account(
         3,
+        writable,
         name = "trait_account",
         desc = "Account used for storing traits for nft on-chain"
     )]
     #[account(
         4,
         name = "payer",
+        writable,
         desc = "Signer of transaction (update authority or holder in case of mint)",
         signer
     )]
@@ -164,12 +166,12 @@ pub fn create_trait(
         },
         AccountMeta {
             is_signer: false,
-            is_writable: false,
+            is_writable: true,
             pubkey: trait_account,
         },
         AccountMeta {
-            is_signer: false,
-            is_writable: false,
+            is_signer: true,
+            is_writable: true,
             pubkey: *payer,
         },
         AccountMeta {
