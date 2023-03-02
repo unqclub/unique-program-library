@@ -5,11 +5,11 @@ use solana_program::{
 
 use crate::instruction::TraitInstruction;
 
-mod create_trait_config;
-use create_trait_config::*;
+mod process_create_trait_config;
+use process_create_trait_config::*;
 
-mod create_trait;
-use create_trait::*;
+mod process_create_trait;
+use process_create_trait::*;
 
 pub fn process_instruction<'a>(
     program_id: &Pubkey,
@@ -20,8 +20,8 @@ pub fn process_instruction<'a>(
 
     match ix {
         TraitInstruction::CreateTraitConfig { data } => {
-            create_trait_config(program_id, accounts, data)
+            process_create_trait_config(program_id, accounts, data)
         }
-        TraitInstruction::CreateTrait { data } => create_trait(program_id, accounts, data),
+        TraitInstruction::CreateTrait { data } => process_create_trait(program_id, accounts, data),
     }
 }

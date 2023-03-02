@@ -17,7 +17,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 use spl_token::ID as TOKEN_PROGRAM_ID;
-pub fn create_trait_config<'a>(
+pub fn process_create_trait_config<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: Vec<CreateTraitConfigArgs>,

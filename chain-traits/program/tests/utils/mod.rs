@@ -1,9 +1,12 @@
 use solana_program_test::*;
 mod nft;
 pub use nft::*;
+mod nft_state;
+mod traits;
+pub use traits::*;
 
 pub fn program_test() -> ProgramTest {
-    let mut program_test = ProgramTest::new("on_chain_traits", on_chain_traits::id(), None);
+    let mut program_test = ProgramTest::new("chain_traits", chain_traits::id(), None);
 
     program_test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program_test.add_builtin_program(

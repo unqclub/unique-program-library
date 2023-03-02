@@ -25,7 +25,7 @@ use crate::{
     utils::{create_program_account, transfer_lamports},
 };
 
-pub fn create_trait<'a>(
+pub fn process_create_trait<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: Vec<CreateTraitArgs>,

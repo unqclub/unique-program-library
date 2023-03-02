@@ -7,6 +7,8 @@ use solana_program::{
     system_instruction,
 };
 
+pub const SYSVAR_INSTRUCTIONS: &str = "Sysvar1nstructions1111111111111111111111111";
+
 pub fn create_program_account<'a>(
     payer: &'a AccountInfo<'a>,
     new_account: &'a AccountInfo<'a>,

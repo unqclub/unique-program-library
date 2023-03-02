@@ -1,28 +1,22 @@
 // #![cfg(feature = "test-bpf")]
 mod utils;
-use std::borrow::Borrow;
-
-use mpl_token_metadata::state::Metadata;
-use solana_program::borsh::try_from_slice_unchecked;
+use crate::utils::{create_and_verify_nft, create_nft_mint, fetch_nft_json};
+use solana_program::sysvar::{instructions::Instructions, Sysvar};
 use solana_program_test::tokio;
 
-use crate::utils::{create_and_verify_collection, create_nft_mint};
 #[tokio::test]
 async fn process_create_trait_config_test() {
     let context = &mut utils::program_test().start_with_context().await;
 
-    let (nft_mint, _nft_token_account) = create_nft_mint(context).await;
+    let (collection_mint, _nft_token_account) = create_nft_mint(context).await;
 
-    let metadata_acc = create_and_verify_collection(context, &nft_mint).await;
+    let _metadata_acc = create_and_verify_nft(context, &collection_mint, None).await;
 
-    let meta_acc_info = context
-        .banks_client
-        .get_account(metadata_acc)
-        .await
-        .unwrap()
-        .unwrap();
+    let (nft_mint, _nft_ta) = create_nft_mint(context).await;
 
-    let metadata = try_from_slice_unchecked::<Metadata>(&meta_acc_info.data.borrow()).unwrap();
+    let _nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint)).await;
 
-    println!("{:?}", metadata);
+    let traits = fetch_nft_json("https://metadata.y00ts.com/y/14985.json").await;
+
+    assert_eq!(traits.attributes.get(0).unwrap().trait_type, "Background");
 }

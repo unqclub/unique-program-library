@@ -1,5 +1,5 @@
 [package]
-name = "on-chain-traits"
+name = "chain-traits"
 version = "0.1.0"
 edition = "2021"
 
@@ -23,6 +23,10 @@ no-entrypoint = []
 [dev-dependencies]
 solana-program-test = "1.10.41"
 solana-sdk = "1.14.12"
+serde_derive = "1.0.152"
+serde = "1.0.152"
+reqwest = "0.11.14"
+
 [lib]
 crate-type = ["cdylib", "lib"]
 path = "src/lib.rs"

@@ -1,5 +1,17 @@
+use std::str::FromStr;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    system_program,
+};
+
+use crate::{
+    state::{TraitConfig, TraitData},
+    utils::SYSVAR_INSTRUCTIONS,
+};
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, ShankInstruction)]
 #[default_optional_accounts]
@@ -73,4 +85,115 @@ pub enum TraitAction {
 pub struct CreateTraitArgs {
     pub name: String,
     pub value: String,
+}
+
+pub fn create_trait_config(
+    program_id: &Pubkey,
+    collection: &Pubkey,
+    collection_metadata: &Pubkey,
+    payer: &Pubkey,
+    traits: Vec<CreateTraitConfigArgs>,
+) -> Instruction {
+    let trait_config_seeds = TraitConfig::get_trait_config_seeds(collection);
+
+    let trait_config = Pubkey::find_program_address(&trait_config_seeds, program_id).0;
+
+    let create_trait_accounts: Vec<AccountMeta> = vec![
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *collection,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: true,
+            pubkey: trait_config,
+        },
+        AccountMeta {
+            is_signer: true,
+            is_writable: false,
+            pubkey: *payer,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *collection_metadata,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: system_program::id(),
+        },
+    ];
+
+    let data = TraitInstruction::CreateTraitConfig { data: traits }
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id: *program_id,
+        accounts: create_trait_accounts,
+        data,
+    }
+}
+
+pub fn create_trait(
+    program_id: &Pubkey,
+    mint: &Pubkey,
+    mint_metadata: &Pubkey,
+    trait_config: &Pubkey,
+    payer: &Pubkey,
+    traits: Vec<CreateTraitArgs>,
+) -> Instruction {
+    let trait_account_seeds = TraitData::get_trait_data_seeds(mint, trait_config);
+
+    let trait_account = Pubkey::find_program_address(&trait_account_seeds, program_id).0;
+
+    let create_trait_accounts: Vec<AccountMeta> = vec![
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *mint,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *mint_metadata,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *trait_config,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: trait_account,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: *payer,
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: system_program::id(),
+        },
+        AccountMeta {
+            is_signer: false,
+            is_writable: false,
+            pubkey: Pubkey::from_str(SYSVAR_INSTRUCTIONS).unwrap(),
+        },
+    ];
+
+    let data = TraitInstruction::CreateTrait { data: traits }
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id: *program_id,
+        accounts: create_trait_accounts,
+        data,
+    }
 }
