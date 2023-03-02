@@ -1,4 +1,6 @@
-use chain_traits::instruction::CreateTraitConfigArgs;
+use std::collections::HashMap;
+
+use chain_traits::{instruction::CreateTraitConfigArgs, state::AvailableTrait};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -77,5 +79,26 @@ impl UriMetadata {
                 values: vec!["None".to_string()],
             },
         ]
+    }
+
+    pub fn map_traits() -> HashMap<String, Vec<AvailableTrait>> {
+        let traits = Self::get_traits();
+        let mut trait_map: HashMap<String, Vec<AvailableTrait>> = HashMap::new();
+
+        traits.iter().for_each(|trait_data| {
+            trait_map.insert(
+                trait_data.name.clone(),
+                trait_data
+                    .values
+                    .iter()
+                    .map(|data| AvailableTrait {
+                        is_active: true,
+                        value: data.clone(),
+                    })
+                    .collect(),
+            );
+        });
+
+        trait_map
     }
 }

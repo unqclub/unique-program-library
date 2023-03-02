@@ -17,7 +17,7 @@ use spl_token::instruction::initialize_account;
 use spl_token::state::Account;
 use spl_token::{state::Mint, ID};
 
-use super::nft_state::{Trait, UriMetadata};
+use super::nft_state::UriMetadata;
 
 pub async fn create_nft_mint(context: &mut ProgramTestContext) -> (Pubkey, Pubkey) {
     let mint = Keypair::new();
@@ -203,5 +203,3 @@ pub async fn fetch_nft_json(url: &str) -> UriMetadata {
         .await
         .unwrap()
 }
-
-pub async fn fetch_all_collection_traits(url: &str) -> () {}

@@ -9,7 +9,7 @@ use solana_program::{
 };
 
 use crate::{
-    state::{TraitConfig, TraitData},
+    state::{find_trait_config_address, find_trait_data_address},
     utils::SYSVAR_INSTRUCTIONS,
 };
 
@@ -94,9 +94,7 @@ pub fn create_trait_config(
     payer: &Pubkey,
     traits: Vec<CreateTraitConfigArgs>,
 ) -> Instruction {
-    let trait_config_seeds = TraitConfig::get_trait_config_seeds(collection);
-
-    let trait_config = Pubkey::find_program_address(&trait_config_seeds, program_id).0;
+    let (trait_config, _trait_config_bump) = find_trait_config_address(collection);
 
     let create_trait_accounts: Vec<AccountMeta> = vec![
         AccountMeta {
@@ -145,9 +143,7 @@ pub fn create_trait(
     payer: &Pubkey,
     traits: Vec<CreateTraitArgs>,
 ) -> Instruction {
-    let trait_account_seeds = TraitData::get_trait_data_seeds(mint, trait_config);
-
-    let trait_account = Pubkey::find_program_address(&trait_account_seeds, program_id).0;
+    let (trait_account, _) = find_trait_data_address(trait_config, mint);
 
     let create_trait_accounts: Vec<AccountMeta> = vec![
         AccountMeta {

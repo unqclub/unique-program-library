@@ -4,7 +4,10 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
-use crate::instruction::{CreateTraitConfigArgs, TraitAction};
+use crate::{
+    id,
+    instruction::{CreateTraitConfigArgs, TraitAction},
+};
 
 #[derive(ShankAccount, BorshDeserialize, BorshSerialize, Clone, Debug)]
 
@@ -51,6 +54,10 @@ impl TraitConfig {
     pub fn get_trait_config_seeds<'a>(collection: &'a Pubkey) -> [&'a [u8]; 2] {
         [b"trait-config", collection.as_ref()]
     }
+}
+
+pub fn find_trait_config_address(collection: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[b"trait-config", collection.as_ref()], &id())
 }
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]

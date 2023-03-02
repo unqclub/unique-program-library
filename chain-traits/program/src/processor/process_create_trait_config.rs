@@ -32,13 +32,7 @@ pub fn process_create_trait_config<'a>(
 
     let collection_metadata_account = Metadata::from_account_info(collection_metadata)?;
 
-    if collection.owner.clone() == TOKEN_PROGRAM_ID {
-        assert!(
-            collection_metadata_account.collection.unwrap().key == collection.key.clone(),
-            "{}",
-            TraitError::InvalidCollection
-        );
-    } else {
+    if collection.owner.clone() != TOKEN_PROGRAM_ID {
         assert!(
             collection_metadata_account
                 .data

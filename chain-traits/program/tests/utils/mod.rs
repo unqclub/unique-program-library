@@ -3,6 +3,7 @@ mod nft;
 pub use nft::*;
 mod nft_state;
 mod traits;
+pub use nft_state::*;
 pub use traits::*;
 
 pub fn program_test() -> ProgramTest {
