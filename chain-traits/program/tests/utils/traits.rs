@@ -4,7 +4,7 @@ use chain_traits::instruction::create_trait_config;
 use chain_traits::state::TraitConfig;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::pubkey::Pubkey;
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
 
@@ -14,7 +14,7 @@ pub async fn store_trait_config(
     context: &mut ProgramTestContext,
     collection: &Pubkey,
     collection_metadata: &Pubkey,
-) -> Result<(), String> {
+) -> Result<(), BanksClientError> {
     let instruction = create_trait_config(
         &chain_traits::id(),
         collection,
@@ -29,9 +29,7 @@ pub async fn store_trait_config(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
-
-    Ok(())
+    context.banks_client.process_transaction(tx).await
 }
 
 pub async fn get_trait_config(

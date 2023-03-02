@@ -24,6 +24,7 @@ pub enum TraitInstruction {
     #[account(
         1,
         name = "trait_config_account",
+        writable,
         desc = "Account used for storing trait config on-chain"
     )]
     #[account(
