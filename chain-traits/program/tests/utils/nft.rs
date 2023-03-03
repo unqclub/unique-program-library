@@ -1,7 +1,9 @@
 // #![cfg(feature = "test-bpf")]
 
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
+use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::instruction::{verify_collection, verify_sized_collection_item};
 use mpl_token_metadata::pda::find_master_edition_account;
 use mpl_token_metadata::state::{Collection, CollectionDetails, Creator};
@@ -9,6 +11,7 @@ use mpl_token_metadata::ID as METADATA_PROGRAM;
 use mpl_token_metadata::{instruction::create_master_edition_v3, pda::find_metadata_account};
 use reqwest::Client;
 use serde_json::json;
+use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::{
     program_pack::Pack, pubkey::Pubkey, rent::Rent, system_instruction::create_account,
 };
@@ -205,4 +208,21 @@ pub async fn fetch_nft_json(url: &str) -> UriMetadata {
         .json::<UriMetadata>()
         .await
         .unwrap()
+}
+
+pub async fn deserialize_account_info<T>(
+    context: &mut ProgramTestContext,
+    account_key: &Pubkey,
+) -> T
+where
+    T: BorshDeserialize + BorshSerialize,
+{
+    let account = context
+        .banks_client
+        .get_account(*account_key)
+        .await
+        .unwrap()
+        .unwrap();
+
+    try_from_slice_unchecked::<T>(&account.data.borrow()).unwrap()
 }

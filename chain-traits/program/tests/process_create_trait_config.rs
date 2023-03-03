@@ -1,15 +1,15 @@
 // #![cfg(feature = "test-bpf")]
 mod utils;
-use std::borrow::Borrow;
 
 use crate::utils::{
-    create_and_verify_nft, create_nft_mint, get_trait_config, store_trait_config, UriMetadata,
+    create_and_verify_nft, create_nft_mint, deserialize_account_info, get_trait_config,
+    store_trait_config, UriMetadata,
 };
 use chain_traits::{
     instruction::{CreateTraitConfigArgs, TraitAction},
     state::{find_trait_config_address, TraitConfig},
 };
-use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
+use solana_program::pubkey::Pubkey;
 use solana_program_test::tokio;
 use solana_sdk::signer::Signer;
 
@@ -131,15 +131,57 @@ pub async fn process_update_trait_config() {
 
     let trait_config_address = find_trait_config_address(&nft_data.0);
 
-    let trait_config_account = context
-        .banks_client
-        .get_account(trait_config_address.0)
+    let trait_config =
+        deserialize_account_info::<TraitConfig>(context, &trait_config_address.0).await;
+    assert_eq!(
+        trait_config
+            .available_traits
+            .get("Weapon")
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .value,
+        "Sword"
+    );
+}
+
+#[tokio::test]
+pub async fn process_remove_trait_from_config() {
+    let context = &mut utils::program_test().start_with_context().await;
+
+    let nft_data = create_nft_mint(context).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None).await;
+
+    store_trait_config(
+        context,
+        &nft_data.0,
+        &nft_metadata,
+        UriMetadata::get_traits(),
+    )
+    .await
+    .unwrap();
+
+    let mut traits = UriMetadata::get_traits();
+
+    traits.get_mut(0).unwrap().action = TraitAction::Remove;
+
+    store_trait_config(context, &nft_data.0, &nft_metadata, traits.clone())
         .await
-        .unwrap()
         .unwrap();
 
-    let trait_config: TraitConfig =
-        try_from_slice_unchecked(&trait_config_account.data.borrow()).unwrap();
+    let trait_config_key = find_trait_config_address(&nft_data.0);
 
-    println!("{:?}", trait_config);
+    let trait_config_account =
+        deserialize_account_info::<TraitConfig>(context, &trait_config_key.0).await;
+
+    assert_eq!(
+        trait_config_account
+            .available_traits
+            .get(&traits.get(0).unwrap().name)
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .is_active,
+        false
+    );
 }
