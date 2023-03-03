@@ -3,12 +3,12 @@
 use std::borrow::Borrow;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_metadata::instruction::{verify_collection, verify_sized_collection_item};
 use mpl_token_metadata::pda::find_master_edition_account;
 use mpl_token_metadata::state::{Collection, CollectionDetails, Creator};
 use mpl_token_metadata::ID as METADATA_PROGRAM;
 use mpl_token_metadata::{instruction::create_master_edition_v3, pda::find_metadata_account};
 use solana_program::borsh::try_from_slice_unchecked;
+use solana_program::instruction::Instruction;
 use solana_program::{
     program_pack::Pack, pubkey::Pubkey, rent::Rent, system_instruction::create_account,
 };
@@ -113,7 +113,8 @@ pub async fn create_and_verify_nft(
     context: &mut ProgramTestContext,
     nft_mint: &Pubkey,
     collection_key: Option<Pubkey>,
-) -> Pubkey {
+    send_transaction: bool,
+) -> (Pubkey, Option<[Instruction; 2]>) {
     let metadata_account = find_metadata_account(nft_mint);
 
     let mut collection_details: Option<CollectionDetails> = None;
@@ -163,40 +164,22 @@ pub async fn create_and_verify_nft(
         Some(0),
     );
 
-    let mut tx = Transaction::new_with_payer(
-        &[create_metadata_ix, create_master_edition_ix],
-        Some(&context.payer.pubkey()),
-    );
+    if send_transaction {
+        let mut tx = Transaction::new_with_payer(
+            &[create_metadata_ix, create_master_edition_ix],
+            Some(&context.payer.pubkey()),
+        );
 
-    tx.sign(&[&context.payer], context.last_blockhash);
-    context.banks_client.process_transaction(tx).await.unwrap();
-
-    let _verify_ix = if collection_key.is_none() {
-        verify_collection(
-            METADATA_PROGRAM,
-            metadata_account.0,
-            context.payer.pubkey(),
-            context.payer.pubkey(),
-            nft_mint.clone(),
-            nft_mint.clone(),
-            edition,
-            None,
-        )
+        tx.sign(&[&context.payer], context.last_blockhash);
+        context.banks_client.process_transaction(tx).await.unwrap();
     } else {
-        let collection_master_edition = find_master_edition_account(&collection_key.unwrap()).0;
-        verify_sized_collection_item(
-            METADATA_PROGRAM,
+        return (
             metadata_account.0,
-            context.payer.pubkey(),
-            context.payer.pubkey(),
-            collection_key.unwrap(),
-            collection_key.unwrap(),
-            collection_master_edition,
-            None,
-        )
-    };
+            Some([create_metadata_ix, create_master_edition_ix]),
+        );
+    }
 
-    metadata_account.0
+    (metadata_account.0, None)
 }
 pub async fn fetch_nft_json(url: &str) -> UriMetadata {
     reqwest::get(url)

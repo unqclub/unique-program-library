@@ -19,16 +19,17 @@ async fn process_create_trait_config_test_happy_path() {
 
     let (collection_mint, _nft_token_account) = create_nft_mint(context).await;
 
-    let collection_metadata = create_and_verify_nft(context, &collection_mint, None).await;
+    let collection_metadata = create_and_verify_nft(context, &collection_mint, None, true).await;
 
     let (nft_mint, _nft_ta) = create_nft_mint(context).await;
 
-    let _nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint)).await;
+    let _nft_metadata =
+        create_and_verify_nft(context, &nft_mint, Some(collection_mint), true).await;
 
     store_trait_config(
         context,
         &collection_mint,
-        &collection_metadata,
+        &collection_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -57,12 +58,12 @@ pub async fn process_create_config_non_collection() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
 
     store_trait_config(
         context,
         &context.payer.pubkey().clone(),
-        &nft_metadata,
+        &nft_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -91,12 +92,12 @@ pub async fn process_create_config_non_collection_fail() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
 
     store_trait_config(
         context,
         &Pubkey::new_unique(),
-        &nft_metadata,
+        &nft_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -108,12 +109,12 @@ pub async fn process_update_trait_config() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
 
     store_trait_config(
         context,
         &nft_data.0,
-        &nft_metadata,
+        &nft_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -125,7 +126,7 @@ pub async fn process_update_trait_config() {
         values: vec!["Sword".to_string(), "Gun".to_string()],
     }];
 
-    store_trait_config(context, &nft_data.0, &nft_metadata, traits)
+    store_trait_config(context, &nft_data.0, &nft_metadata.0, traits)
         .await
         .unwrap();
 
@@ -150,12 +151,12 @@ pub async fn process_remove_trait_from_config() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
 
     store_trait_config(
         context,
         &nft_data.0,
-        &nft_metadata,
+        &nft_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -165,7 +166,7 @@ pub async fn process_remove_trait_from_config() {
 
     traits.get_mut(0).unwrap().action = TraitAction::Remove;
 
-    store_trait_config(context, &nft_data.0, &nft_metadata, traits.clone())
+    store_trait_config(context, &nft_data.0, &nft_metadata.0, traits.clone())
         .await
         .unwrap();
 

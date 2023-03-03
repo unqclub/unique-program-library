@@ -16,16 +16,16 @@ pub async fn process_create_trait_happy_path() {
 
     let (collection_mint, _) = create_nft_mint(context).await;
 
-    let collection_metadata = create_and_verify_nft(context, &collection_mint, None).await;
+    let collection_metadata = create_and_verify_nft(context, &collection_mint, None, true).await;
 
     let (nft_mint, _) = create_nft_mint(context).await;
 
-    let nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint)).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint), true).await;
 
     store_trait_config(
         context,
         &collection_mint,
-        &collection_metadata,
+        &collection_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -40,7 +40,7 @@ pub async fn process_create_trait_happy_path() {
     store_nft_trait(
         context,
         &nft_mint,
-        &nft_metadata,
+        &nft_metadata.0,
         &trait_config_address,
         create_trait_args,
         None,
@@ -56,12 +56,12 @@ pub async fn process_save_traits_non_update_authority() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let (collection_mint, _) = create_nft_mint(context).await;
-    let collection_metadata = create_and_verify_nft(context, &collection_mint, None).await;
+    let collection_metadata = create_and_verify_nft(context, &collection_mint, None, true).await;
 
     store_trait_config(
         context,
         &collection_mint,
-        &collection_metadata,
+        &collection_metadata.0,
         UriMetadata::get_traits(),
     )
     .await
@@ -82,14 +82,14 @@ pub async fn process_save_traits_non_update_authority() {
     );
 
     let (nft_mint, _) = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint)).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_mint, Some(collection_mint), true).await;
 
     let y00t_traits = fetch_nft_json("https://metadata.y00ts.com/y/14999.json").await;
 
     store_nft_trait(
         context,
         &nft_mint,
-        &nft_metadata,
+        &nft_metadata.0,
         &trait_config_address.0,
         y00t_traits.map_to_args(),
         Some(&minter),

@@ -1,4 +1,8 @@
-use solana_program::{pubkey::Pubkey, system_instruction, system_program};
+use std::borrow::Borrow;
+
+use solana_program::{
+    instruction::Instruction, pubkey::Pubkey, system_instruction, system_program,
+};
 use solana_program_test::*;
 mod nft;
 pub use nft::*;
@@ -53,4 +57,36 @@ pub async fn create_account(context: &mut ProgramTestContext, new_account: &Keyp
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
+}
+
+pub async fn send_transaction(
+    context: &mut ProgramTestContext,
+    instructions: &[Instruction],
+    payer: Option<&Keypair>,
+    partial_signer: Option<&Keypair>,
+) {
+    let mut transaction_signers: Vec<&Keypair> = vec![];
+    let transaction_payer = if let Some(tx_payer) = payer {
+        tx_payer
+    } else {
+        context.payer.borrow()
+    };
+
+    transaction_signers.push(transaction_payer);
+    if let Some(partial_sig) = partial_signer {
+        transaction_signers.push(partial_sig);
+    }
+
+    let transaction = Transaction::new_signed_with_payer(
+        instructions,
+        Some(&transaction_payer.pubkey()),
+        &transaction_signers,
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(transaction)
+        .await
+        .unwrap();
 }
