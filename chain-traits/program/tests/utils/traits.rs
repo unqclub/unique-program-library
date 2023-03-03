@@ -7,6 +7,7 @@ use chain_traits::state::TraitConfig;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
+use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
 
@@ -53,20 +54,27 @@ pub async fn store_nft_trait(
     nft_metadata: &Pubkey,
     trait_config: &Pubkey,
     traits: Vec<CreateTraitArgs>,
+    payer: Option<&Keypair>,
 ) -> Result<(), BanksClientError> {
+    let update_authority = if let Some(update_auth) = payer {
+        &update_auth
+    } else {
+        context.payer.borrow()
+    };
+
     let store_trait_ix = create_trait(
         &chain_traits::id(),
         nft_mint,
         nft_metadata,
         trait_config,
-        &context.payer.pubkey(),
+        &update_authority.pubkey(),
         traits,
     );
 
     let tx = Transaction::new_signed_with_payer(
         &[store_trait_ix],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
+        Some(&update_authority.pubkey()),
+        &[update_authority],
         context.last_blockhash,
     );
 
