@@ -1,10 +1,14 @@
 // #![cfg(feature = "test-bpf")]
 
+use std::collections::HashMap;
+
 use mpl_token_metadata::instruction::{verify_collection, verify_sized_collection_item};
 use mpl_token_metadata::pda::find_master_edition_account;
 use mpl_token_metadata::state::{Collection, CollectionDetails, Creator};
 use mpl_token_metadata::ID as METADATA_PROGRAM;
 use mpl_token_metadata::{instruction::create_master_edition_v3, pda::find_metadata_account};
+use reqwest::Client;
+use serde_json::json;
 use solana_program::{
     program_pack::Pack, pubkey::Pubkey, rent::Rent, system_instruction::create_account,
 };
@@ -194,7 +198,6 @@ pub async fn create_and_verify_nft(
 
     metadata_account.0
 }
-
 pub async fn fetch_nft_json(url: &str) -> UriMetadata {
     reqwest::get(url)
         .await

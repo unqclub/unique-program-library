@@ -1,6 +1,8 @@
 use std::borrow::Borrow;
 
-use chain_traits::instruction::{create_trait, create_trait_config, CreateTraitArgs};
+use chain_traits::instruction::{
+    create_trait, create_trait_config, CreateTraitArgs, CreateTraitConfigArgs,
+};
 use chain_traits::state::TraitConfig;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::pubkey::Pubkey;
@@ -8,19 +10,18 @@ use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
 
-use super::nft_state::UriMetadata;
-
 pub async fn store_trait_config(
     context: &mut ProgramTestContext,
     collection: &Pubkey,
     collection_metadata: &Pubkey,
+    traits: Vec<CreateTraitConfigArgs>,
 ) -> Result<(), BanksClientError> {
     let instruction = create_trait_config(
         &chain_traits::id(),
         collection,
         collection_metadata,
         &context.payer.pubkey(),
-        UriMetadata::get_traits(),
+        traits,
     );
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
