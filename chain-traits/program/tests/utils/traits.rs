@@ -4,16 +4,20 @@ use chain_traits::instruction::{
     create_trait, create_trait_config, CreateTraitArgs, CreateTraitConfigArgs,
 };
 use chain_traits::state::TraitConfig;
+use mpl_token_metadata::instruction::Mint;
 use solana_program::borsh::try_from_slice_unchecked;
+
 use solana_program::instruction::Instruction;
 use solana_program::program_pack::Pack;
 use solana_program::pubkey::Pubkey;
 use solana_program::rent::Rent;
-use solana_program::system_instruction;
+use solana_program::system_instruction::create_account;
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 use solana_sdk::transaction::Transaction;
+use spl_token::instruction::initialize_account;
+use spl_token::state::Account;
 
 use super::{create_and_verify_nft, send_transaction};
 
@@ -93,76 +97,99 @@ pub async fn mint_and_store_trait(
     trait_config: &Pubkey,
     traits: Vec<CreateTraitArgs>,
     payer: &Keypair,
-) {
-    let token = Keypair::new();
+) -> Pubkey {
     let mint = Keypair::new();
-
-    let create_mint_account = system_instruction::create_account(
-        &payer.pubkey(),
-        &token.pubkey(),
+    let create_account_ix = create_account(
+        &context.payer.pubkey(),
+        &mint.pubkey(),
         Rent::default().minimum_balance(spl_token::state::Mint::LEN),
         spl_token::state::Mint::LEN as u64,
         &spl_token::ID,
     );
 
-    let init_mint = spl_token::instruction::initialize_mint(
-        &spl_token::id(),
+    let ix = spl_token::instruction::initialize_mint(
+        &spl_token::ID,
         &mint.pubkey(),
-        &payer.pubkey(),
+        &context.payer.pubkey(),
         Some(&context.payer.pubkey()),
         0,
     )
     .unwrap();
 
-    let create_account_ix = system_instruction::create_account(
-        &payer.pubkey(),
-        &token.pubkey(),
-        Rent::default().minimum_balance(spl_token::state::Account::LEN),
-        spl_token::state::Account::LEN as u64,
+    let token_account_key = Keypair::new();
+
+    let create_token_acc_ix = create_account(
+        &context.payer.pubkey(),
+        &token_account_key.pubkey(),
+        Rent::default().minimum_balance(Account::LEN),
+        Account::LEN as u64,
         &spl_token::ID,
     );
 
-    let init_token_account = spl_token::instruction::initialize_account(
-        &spl_token::id(),
-        &token.pubkey(),
+    let initialize_token_account = initialize_account(
+        &spl_token::ID,
+        &token_account_key.pubkey(),
         &mint.pubkey(),
         &payer.pubkey(),
     )
     .unwrap();
-    send_transaction(
-        context,
-        &[
-            create_mint_account,
-            init_mint,
-            create_account_ix,
-            init_token_account,
-        ],
-        None,
-        None,
-    )
-    .await;
 
-    let mint_to_ix = spl_token::instruction::mint_to(
-        &spl_token::id(),
+    let create_ta_ix = Transaction::new_signed_with_payer(
+        &[create_token_acc_ix, initialize_token_account],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &token_account_key],
+        context.last_blockhash,
+    );
+
+    let mint_ix = spl_token::instruction::mint_to(
+        &spl_token::ID,
         &mint.pubkey(),
-        &token.pubkey(),
-        &payer.pubkey(),
-        &[&payer.pubkey()],
+        &token_account_key.pubkey(),
+        &context.payer.pubkey(),
+        &[&context.payer.pubkey()],
         1,
     )
     .unwrap();
 
-    let (metadata, instructions) =
-        create_and_verify_nft(context, &mint.pubkey(), Some(*collection), false).await;
+    // let mint_tx = Transaction::new_signed_with_payer(
+    //     &[mint_ix],
+    //     Some(&context.payer.pubkey()),
+    //     &[&context.payer],
+    //     context.last_blockhash,
+    // );
 
-    let mut ix: Vec<Instruction> = vec![mint_to_ix];
+    let tx = Transaction::new_signed_with_payer(
+        &[create_account_ix, ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &mint],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    context
+        .banks_client
+        .process_transaction(create_ta_ix)
+        .await
+        .unwrap();
+
+    let (metadata, instructions) = create_and_verify_nft(
+        context,
+        &mint.pubkey(),
+        Some(*collection),
+        false,
+        Some(payer),
+    )
+    .await;
+
+    let mut tx_instructions: Vec<Instruction> = vec![mint_ix];
 
     instructions
         .unwrap()
         .iter()
-        .for_each(|ix_data| ix.push(ix_data.clone()));
+        .for_each(|ix| tx_instructions.push(ix.clone()));
 
-    let store_trait_ix = create_trait(
+    let create_traits_ix = create_trait(
         &chain_traits::id(),
         &mint.pubkey(),
         &metadata,
@@ -171,7 +198,20 @@ pub async fn mint_and_store_trait(
         traits,
     );
 
-    ix.push(store_trait_ix);
+    tx_instructions.push(create_traits_ix);
 
-    send_transaction(context, &ix, Some(payer), None).await;
+    let trait_tx = Transaction::new_signed_with_payer(
+        &tx_instructions,
+        Some(&payer.pubkey()),
+        &[&payer, &context.payer],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(trait_tx)
+        .await
+        .unwrap();
+
+    mint.pubkey()
 }

@@ -63,7 +63,7 @@ pub async fn send_transaction(
     context: &mut ProgramTestContext,
     instructions: &[Instruction],
     payer: Option<&Keypair>,
-    partial_signer: Option<&Keypair>,
+    partial_signer: Option<Vec<&Keypair>>,
 ) {
     let mut transaction_signers: Vec<&Keypair> = vec![];
     let transaction_payer = if let Some(tx_payer) = payer {
@@ -74,7 +74,7 @@ pub async fn send_transaction(
 
     transaction_signers.push(transaction_payer);
     if let Some(partial_sig) = partial_signer {
-        transaction_signers.push(partial_sig);
+        transaction_signers.extend(partial_sig);
     }
 
     let transaction = Transaction::new_signed_with_payer(

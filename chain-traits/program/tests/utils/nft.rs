@@ -114,8 +114,15 @@ pub async fn create_and_verify_nft(
     nft_mint: &Pubkey,
     collection_key: Option<Pubkey>,
     send_transaction: bool,
+    payer: Option<&Keypair>,
 ) -> (Pubkey, Option<[Instruction; 2]>) {
     let metadata_account = find_metadata_account(nft_mint);
+
+    let tx_payer = if let Some(payer) = payer {
+        payer
+    } else {
+        context.payer.borrow()
+    };
 
     let mut collection_details: Option<CollectionDetails> = None;
     let mut collection_data: Option<Collection> = None;
@@ -133,7 +140,7 @@ pub async fn create_and_verify_nft(
         metadata_account.0,
         nft_mint.clone(),
         context.payer.pubkey(),
-        context.payer.pubkey(),
+        tx_payer.pubkey(),
         context.payer.pubkey(),
         "DeGod #0001".to_string(),
         "degods".to_string(),
@@ -160,7 +167,7 @@ pub async fn create_and_verify_nft(
         context.payer.pubkey(),
         context.payer.pubkey(),
         metadata_account.0,
-        context.payer.pubkey(),
+        tx_payer.pubkey(),
         Some(0),
     );
 

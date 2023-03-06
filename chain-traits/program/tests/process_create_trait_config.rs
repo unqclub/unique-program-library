@@ -19,12 +19,13 @@ async fn process_create_trait_config_test_happy_path() {
 
     let (collection_mint, _nft_token_account) = create_nft_mint(context).await;
 
-    let collection_metadata = create_and_verify_nft(context, &collection_mint, None, true).await;
+    let collection_metadata =
+        create_and_verify_nft(context, &collection_mint, None, true, None).await;
 
     let (nft_mint, _nft_ta) = create_nft_mint(context).await;
 
     let _nft_metadata =
-        create_and_verify_nft(context, &nft_mint, Some(collection_mint), true).await;
+        create_and_verify_nft(context, &nft_mint, Some(collection_mint), true, None).await;
 
     store_trait_config(
         context,
@@ -58,7 +59,7 @@ pub async fn process_create_config_non_collection() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true, None).await;
 
     store_trait_config(
         context,
@@ -92,7 +93,7 @@ pub async fn process_create_config_non_collection_fail() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true, None).await;
 
     store_trait_config(
         context,
@@ -109,7 +110,7 @@ pub async fn process_update_trait_config() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true, None).await;
 
     store_trait_config(
         context,
@@ -151,7 +152,7 @@ pub async fn process_remove_trait_from_config() {
     let context = &mut utils::program_test().start_with_context().await;
 
     let nft_data = create_nft_mint(context).await;
-    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true).await;
+    let nft_metadata = create_and_verify_nft(context, &nft_data.0, None, true, None).await;
 
     store_trait_config(
         context,
