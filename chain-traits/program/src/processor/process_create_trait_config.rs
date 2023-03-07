@@ -27,31 +27,33 @@ pub fn process_create_trait_config<'a>(
     let collection = next_account_info(account_infos)?;
     let trait_config = next_account_info(account_infos)?;
     let update_autority = next_account_info(account_infos)?;
-    let collection_metadata = next_account_info(account_infos)?;
+    let _collection_metadata = next_account_info(account_infos)?;
     let system_program = next_account_info(account_infos)?;
 
-    let collection_metadata_account = Metadata::from_account_info(collection_metadata)?;
+    //TODO:comment in before mainnet
 
-    if collection.owner.clone() != TOKEN_PROGRAM_ID {
-        assert!(
-            collection_metadata_account
-                .data
-                .creators
-                .unwrap()
-                .get(0)
-                .unwrap()
-                .address
-                == *collection.key,
-            "{}",
-            TraitError::InvalidCollection
-        );
-    }
+    // let collection_metadata_account = Metadata::from_account_info(collection_metadata)?;
 
-    assert!(
-        collection_metadata_account.update_authority == *update_autority.key,
-        "{}",
-        TraitError::NotUpdateAuthority
-    );
+    // if collection.owner.clone() != TOKEN_PROGRAM_ID {
+    //     assert!(
+    //         collection_metadata_account
+    //             .data
+    //             .creators
+    //             .unwrap()
+    //             .get(0)
+    //             .unwrap()
+    //             .address
+    //             == *collection.key,
+    //         "{}",
+    //         TraitError::InvalidCollection
+    //     );
+    // }
+
+    // assert!(
+    //     collection_metadata_account.update_authority == *update_autority.key,
+    //     "{}",
+    //     TraitError::NotUpdateAuthority
+    // );
 
     let (trait_config_account_address, trait_config_account_bump) = Pubkey::find_program_address(
         &TraitConfig::get_trait_config_seeds(collection.key),
@@ -60,7 +62,7 @@ pub fn process_create_trait_config<'a>(
 
     assert!(
         trait_config_account_address == *trait_config.key,
-        "{}",
+        "{:?}",
         TraitError::InvalidAccountSeeds
     );
     if trait_config.data_is_empty() {
