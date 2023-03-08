@@ -14,6 +14,8 @@ pub enum TraitError {
     TraitDoesNotExist,
     #[error("Invalid account seeds")]
     InvalidAccountSeeds,
+    #[error("Trait already exists")]
+    TraitAlreadyExists,
 }
 impl From<TraitError> for ProgramError {
     fn from(e: TraitError) -> Self {

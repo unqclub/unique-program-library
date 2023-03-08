@@ -4,7 +4,6 @@ use chain_traits::instruction::{
     create_trait, create_trait_config, CreateTraitArgs, CreateTraitConfigArgs,
 };
 use chain_traits::state::TraitConfig;
-use mpl_token_metadata::instruction::Mint;
 use solana_program::borsh::try_from_slice_unchecked;
 
 use solana_program::instruction::Instruction;
@@ -19,7 +18,7 @@ use solana_sdk::transaction::Transaction;
 use spl_token::instruction::initialize_account;
 use spl_token::state::Account;
 
-use super::{create_and_verify_nft, send_transaction};
+use super::create_and_verify_nft;
 
 pub async fn store_trait_config(
     context: &mut ProgramTestContext,
@@ -63,7 +62,7 @@ pub async fn store_nft_trait(
     nft_mint: &Pubkey,
     nft_metadata: &Pubkey,
     trait_config: &Pubkey,
-    traits: Vec<CreateTraitArgs>,
+    traits: Vec<Vec<CreateTraitArgs>>,
     payer: Option<&Keypair>,
 ) -> Result<(), BanksClientError> {
     let update_authority = if let Some(update_auth) = payer {
@@ -95,7 +94,7 @@ pub async fn mint_and_store_trait(
     context: &mut ProgramTestContext,
     collection: &Pubkey,
     trait_config: &Pubkey,
-    traits: Vec<CreateTraitArgs>,
+    traits: Vec<Vec<CreateTraitArgs>>,
     payer: &Keypair,
 ) -> Pubkey {
     let mint = Keypair::new();

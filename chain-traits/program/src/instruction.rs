@@ -68,7 +68,7 @@ pub enum TraitInstruction {
         opt,
         desc = "Sysvar defining instruction of same transaction"
     )]
-    CreateTrait { data: Vec<CreateTraitArgs> },
+    CreateTrait { data: Vec<Vec<CreateTraitArgs>> },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
@@ -82,12 +82,13 @@ pub struct CreateTraitConfigArgs {
 pub enum TraitAction {
     Add,
     Remove,
+    Modify,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct CreateTraitArgs {
-    pub name: String,
-    pub value: String,
+    pub name: u8,
+    pub value: u8,
 }
 
 pub fn create_trait_config(
@@ -144,7 +145,7 @@ pub fn create_trait(
     mint_metadata: &Pubkey,
     trait_config: &Pubkey,
     payer: &Pubkey,
-    traits: Vec<CreateTraitArgs>,
+    traits: Vec<Vec<CreateTraitArgs>>,
 ) -> Instruction {
     let (trait_account, _) = find_trait_data_address(trait_config, mint);
 

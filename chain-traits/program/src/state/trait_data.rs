@@ -11,7 +11,7 @@ pub struct TraitData {
     pub trait_config: Pubkey,
     pub nft_mint: Pubkey,
     pub last_modified: i64,
-    pub traits: HashMap<String, String>,
+    pub traits: HashMap<u8, u8>,
 }
 impl TraitData {
     pub const LEN: usize = 32 + 32 + 8;

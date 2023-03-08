@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ops::DerefMut;
 
 use crate::instruction::{CreateTraitConfigArgs, TraitAction};
-use crate::state::TraitConfig;
+use crate::state::{TraitConfig, TraitConfigKey};
 use crate::utils::{create_program_account, transfer_lamports};
 use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
@@ -64,7 +64,8 @@ pub fn process_create_trait_config<'a>(
         TraitError::InvalidAccountSeeds
     );
     if trait_config.data_is_empty() {
-        let trait_map: HashMap<String, Vec<AvailableTrait>> = TraitConfig::traits_to_map(data);
+        let trait_map: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> =
+            TraitConfig::traits_to_map(data);
 
         let trait_map_len = trait_map.try_to_vec().unwrap().len();
         create_program_account(
@@ -94,9 +95,27 @@ pub fn process_create_trait_config<'a>(
 
         let data_len = trait_config.data_len();
 
-        for new_trait in data.iter() {
+        for (mut index, new_trait) in data.iter().enumerate() {
+            if new_trait.action == TraitAction::Add {
+                assert!(
+                    trait_config_account
+                        .available_traits
+                        .iter()
+                        .find(|t| t.0.name == new_trait.name)
+                        .is_none(),
+                    "{:?}",
+                    TraitError::TraitAlreadyExists
+                );
+                index = trait_config_account.available_traits.len();
+            }
+
+            if new_trait.action == TraitAction::Remove {}
+
             trait_config_account.available_traits.insert(
-                new_trait.name.clone(),
+                TraitConfigKey {
+                    name: new_trait.name.clone(),
+                    id: index as u8,
+                },
                 TraitConfig::map_available_traits(
                     new_trait.values.clone(),
                     new_trait.action == TraitAction::Add,

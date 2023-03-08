@@ -15,7 +15,13 @@ pub struct TraitConfig {
     pub collection: Pubkey,
     pub update_authoirty: Pubkey,
     pub last_modified: i64,
-    pub available_traits: HashMap<String, Vec<AvailableTrait>>,
+    pub available_traits: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>>,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, PartialOrd, Eq, Hash)]
+pub struct TraitConfigKey {
+    pub name: String,
+    pub id: u8,
 }
 
 impl TraitConfig {
@@ -23,33 +29,56 @@ impl TraitConfig {
 
     pub fn traits_to_map(
         traits: Vec<CreateTraitConfigArgs>,
-    ) -> HashMap<String, Vec<AvailableTrait>> {
-        let mut trait_map: HashMap<String, Vec<AvailableTrait>> = HashMap::new();
-        traits.iter().for_each(|trait_info| {
-            trait_map.insert(
-                trait_info.name.clone(),
+    ) -> HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> {
+        let mut trait_map: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> = HashMap::new();
+        traits
+            .iter()
+            .enumerate()
+            .for_each(|(name_index, trait_info)| {
+                let mut values_map: HashMap<u8, AvailableTrait> = HashMap::new();
+
                 trait_info
                     .values
                     .iter()
-                    .map(|traits_data| AvailableTrait {
-                        value: traits_data.clone(),
-                        is_active: trait_info.action == TraitAction::Add,
-                    })
-                    .collect(),
-            );
-        });
+                    .enumerate()
+                    .for_each(|(index, value)| {
+                        values_map.insert(
+                            index as u8,
+                            AvailableTrait {
+                                value: value.clone(),
+                                is_active: trait_info.action == TraitAction::Add,
+                            },
+                        );
+                    });
+                trait_map.insert(
+                    TraitConfigKey {
+                        id: name_index as u8,
+                        name: trait_info.name.clone(),
+                    },
+                    values_map,
+                );
+            });
 
         trait_map
     }
 
-    pub fn map_available_traits(traits: Vec<String>, is_active: bool) -> Vec<AvailableTrait> {
-        traits
-            .iter()
-            .map(|trait_info| AvailableTrait {
-                is_active,
-                value: trait_info.clone(),
-            })
-            .collect()
+    pub fn map_available_traits(
+        traits: Vec<String>,
+        is_active: bool,
+    ) -> HashMap<u8, AvailableTrait> {
+        let mut available_traits: HashMap<u8, AvailableTrait> = HashMap::new();
+
+        traits.iter().enumerate().for_each(|(index, value)| {
+            available_traits.insert(
+                index.try_into().unwrap(),
+                AvailableTrait {
+                    value: value.clone(),
+                    is_active: is_active,
+                },
+            );
+        });
+
+        available_traits
     }
     pub fn get_trait_config_seeds<'a>(collection: &'a Pubkey) -> [&'a [u8]; 2] {
         [b"trait-config", collection.as_ref()]

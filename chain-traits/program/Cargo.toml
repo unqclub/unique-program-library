@@ -15,7 +15,7 @@ num-traits = "0.2"
 spl-token =  "3.5"
 spl-associated-token-account = "1.1.2"
 mpl-token-metadata = {version="1.8.5",features=["no-entrypoint"]}
-
+itertools = "0.10.5"
 [features]
 test-bpf = []
 no-entrypoint = []

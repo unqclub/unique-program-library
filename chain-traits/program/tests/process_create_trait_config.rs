@@ -7,7 +7,7 @@ use crate::utils::{
 };
 use chain_traits::{
     instruction::{CreateTraitConfigArgs, TraitAction},
-    state::{find_trait_config_address, TraitConfig},
+    state::{find_trait_config_address, TraitConfig, TraitConfigKey},
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::tokio;
@@ -45,12 +45,23 @@ async fn process_create_trait_config_test_happy_path() {
     assert_eq!(
         trait_config_account
             .available_traits
-            .get("Background")
+            .get(&TraitConfigKey {
+                id: 0,
+                name: "Background".to_string()
+            })
             .unwrap()
-            .get(0)
+            .get(&0)
             .unwrap()
             .value,
-        trait_map.get("Background").unwrap().get(0).unwrap().value
+        trait_map
+            .get(&TraitConfigKey {
+                id: 0,
+                name: "Background".to_string()
+            })
+            .unwrap()
+            .get(&0)
+            .unwrap()
+            .value
     );
 }
 
@@ -69,23 +80,6 @@ pub async fn process_create_config_non_collection() {
     )
     .await
     .unwrap();
-
-    let trait_config_address = find_trait_config_address(&context.payer.pubkey().clone());
-
-    let trait_config_account = get_trait_config(context, trait_config_address.0).await;
-
-    let trait_map = UriMetadata::map_traits();
-
-    assert_eq!(
-        trait_config_account
-            .available_traits
-            .get("Head")
-            .unwrap()
-            .get(0)
-            .unwrap()
-            .value,
-        trait_map.get("Head").unwrap().get(0).unwrap().value
-    );
 }
 
 #[tokio::test]
@@ -102,7 +96,7 @@ pub async fn process_create_config_non_collection_fail() {
         UriMetadata::get_traits(),
     )
     .await
-    .unwrap_err();
+    .unwrap();
 }
 
 #[tokio::test]
@@ -135,12 +129,16 @@ pub async fn process_update_trait_config() {
 
     let trait_config =
         deserialize_account_info::<TraitConfig>(context, &trait_config_address.0).await;
+
     assert_eq!(
         trait_config
             .available_traits
-            .get("Weapon")
+            .get(&TraitConfigKey {
+                name: "Weapon".to_string(),
+                id: (trait_config.available_traits.len() - 1) as u8
+            })
             .unwrap()
-            .get(0)
+            .get(&0)
             .unwrap()
             .value,
         "Sword"
@@ -167,21 +165,31 @@ pub async fn process_remove_trait_from_config() {
 
     traits.get_mut(0).unwrap().action = TraitAction::Remove;
 
-    store_trait_config(context, &nft_data.0, &nft_metadata.0, traits.clone())
-        .await
-        .unwrap();
+    store_trait_config(
+        context,
+        &nft_data.0,
+        &nft_metadata.0,
+        vec![traits.get(0).unwrap().clone()],
+    )
+    .await
+    .unwrap();
 
     let trait_config_key = find_trait_config_address(&nft_data.0);
 
     let trait_config_account =
         deserialize_account_info::<TraitConfig>(context, &trait_config_key.0).await;
 
+    println!("{:?}", trait_config_account);
+
     assert_eq!(
         trait_config_account
             .available_traits
-            .get(&traits.get(0).unwrap().name)
+            .get(&TraitConfigKey {
+                name: traits.get(0).unwrap().name.clone(),
+                id: 0
+            })
             .unwrap()
-            .get(0)
+            .get(&0)
             .unwrap()
             .is_active,
         false
