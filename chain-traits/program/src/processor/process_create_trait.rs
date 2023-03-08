@@ -43,7 +43,7 @@ pub fn process_create_trait<'a>(
 
     assert!(
         !trait_config_account_info.data_is_empty(),
-        "{}",
+        "{:?}",
         TraitError::TraitConfigNotInitialized
     );
 
@@ -53,7 +53,7 @@ pub fn process_create_trait<'a>(
 
     assert!(
         metadata_address == *nft_metadata_info.key,
-        "{}",
+        "{:?}",
         TraitError::InvalidCollection
     );
 
@@ -63,13 +63,13 @@ pub fn process_create_trait<'a>(
     if let Some(collection) = metadata_acc.collection {
         assert!(
             collection.key == trait_config.collection,
-            "{}",
+            "{:?}",
             TraitError::InvalidCollection
         );
     } else {
         assert!(
             metadata_acc.data.creators.unwrap().get(0).unwrap().address == trait_config.collection,
-            "{}",
+            "{:?}",
             TraitError::InvalidCollection
         );
     }
@@ -88,7 +88,7 @@ pub fn process_create_trait<'a>(
 
         assert!(
             mint_to_executed,
-            "{}",
+            "{:?}",
             TraitError::WrongAuthorityToCreateTrait
         );
     }
@@ -99,7 +99,7 @@ pub fn process_create_trait<'a>(
             let found_trait = available_trait
                 .iter()
                 .find(|item| item.value == trait_data.value && item.is_active);
-            assert!(found_trait.is_some(), "{}", TraitError::TraitDoesNotExist);
+            assert!(found_trait.is_some(), "{:?}", TraitError::TraitDoesNotExist);
         } else {
             return Err(TraitError::TraitDoesNotExist.into());
         }
@@ -112,7 +112,7 @@ pub fn process_create_trait<'a>(
 
     assert!(
         trait_account_address == *trait_account_info.key,
-        "{}",
+        "{:?}",
         TraitError::InvalidAccountSeeds
     );
 
@@ -135,6 +135,7 @@ pub fn process_create_trait<'a>(
         trait_account.nft_mint = *nft_mint_info.key;
         trait_account.last_modified = Clock::get().unwrap().unix_timestamp;
         trait_account.traits = trait_map;
+        trait_account.trait_config = *trait_config_account_info.key;
         trait_account.serialize(trait_account_info.try_borrow_mut_data()?.deref_mut())?;
     } else {
         let mut trait_account =

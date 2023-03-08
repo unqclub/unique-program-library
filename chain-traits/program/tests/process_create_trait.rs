@@ -1,14 +1,13 @@
 mod utils;
 
 use crate::utils::UriMetadata;
-use chain_traits::state::{find_trait_config_address, find_trait_data_address, TraitData};
+use chain_traits::state::find_trait_config_address;
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::tokio;
 use solana_sdk::{signature::Keypair, signer::Signer};
 use utils::{
-    airdrop_funds, create_account, create_and_verify_nft, create_nft_mint,
-    deserialize_account_info, fetch_nft_json, mint_and_store_trait, store_nft_trait,
-    store_trait_config,
+    airdrop_funds, create_account, create_and_verify_nft, create_nft_mint, fetch_nft_json,
+    mint_and_store_trait, store_nft_trait, store_trait_config,
 };
 
 #[tokio::test]
@@ -70,7 +69,6 @@ pub async fn process_save_traits_non_update_authority() {
     )
     .await
     .unwrap();
-
     let trait_config_address = find_trait_config_address(&collection_mint);
 
     create_account(context, &minter).await;

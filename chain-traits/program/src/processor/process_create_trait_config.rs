@@ -6,7 +6,6 @@ use crate::state::TraitConfig;
 use crate::utils::{create_program_account, transfer_lamports};
 use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
-use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
 use solana_program::rent::Rent;
@@ -16,7 +15,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     pubkey::Pubkey,
 };
-use spl_token::ID as TOKEN_PROGRAM_ID;
 pub fn process_create_trait_config<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
