@@ -6,11 +6,10 @@ use solana_program::pubkey::Pubkey;
 
 use crate::{
     id,
-    instruction::{CreateTraitConfigArgs, TraitAction},
+    instruction::{CreateTraitConfigArgs, TraitAction, TraitValueAction},
 };
 
 #[derive(ShankAccount, BorshDeserialize, BorshSerialize, Clone, Debug)]
-
 pub struct TraitConfig {
     pub collection: Pubkey,
     pub update_authoirty: Pubkey,
@@ -45,8 +44,8 @@ impl TraitConfig {
                         values_map.insert(
                             index as u8,
                             AvailableTrait {
-                                value: value.clone(),
-                                is_active: trait_info.action == TraitAction::Add,
+                                value: value.name.clone(),
+                                is_active: value.action == TraitAction::Add,
                             },
                         );
                     });
@@ -62,18 +61,15 @@ impl TraitConfig {
         trait_map
     }
 
-    pub fn map_available_traits(
-        traits: Vec<String>,
-        is_active: bool,
-    ) -> HashMap<u8, AvailableTrait> {
+    pub fn map_available_traits(traits: Vec<TraitValueAction>) -> HashMap<u8, AvailableTrait> {
         let mut available_traits: HashMap<u8, AvailableTrait> = HashMap::new();
 
         traits.iter().enumerate().for_each(|(index, value)| {
             available_traits.insert(
                 index.try_into().unwrap(),
                 AvailableTrait {
-                    value: value.clone(),
-                    is_active: is_active,
+                    value: value.name.clone(),
+                    is_active: value.action == TraitAction::Add,
                 },
             );
         });

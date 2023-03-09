@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::DerefMut;
 
-use crate::instruction::{CreateTraitConfigArgs, TraitAction};
+use crate::instruction::CreateTraitConfigArgs;
 use crate::state::{TraitConfig, TraitConfigKey};
 use crate::utils::{create_program_account, transfer_lamports};
 use crate::{errors::TraitError, state::AvailableTrait};
@@ -95,31 +95,23 @@ pub fn process_create_trait_config<'a>(
 
         let data_len = trait_config.data_len();
 
-        for (mut index, new_trait) in data.iter().enumerate() {
-            if new_trait.action == TraitAction::Add {
-                assert!(
-                    trait_config_account
-                        .available_traits
-                        .iter()
-                        .find(|t| t.0.name == new_trait.name)
-                        .is_none(),
-                    "{:?}",
-                    TraitError::TraitAlreadyExists
-                );
-                index = trait_config_account.available_traits.len();
-            }
-
-            if new_trait.action == TraitAction::Remove {}
+        for new_trait in data.iter() {
+            let existing_trait = trait_config_account
+                .available_traits
+                .iter()
+                .find(|trait_config| trait_config.0.name == new_trait.name);
+            let index = if let Some(existing_trait) = existing_trait {
+                existing_trait.0.id
+            } else {
+                trait_config_account.available_traits.len() as u8
+            };
 
             trait_config_account.available_traits.insert(
                 TraitConfigKey {
                     name: new_trait.name.clone(),
-                    id: index as u8,
+                    id: index,
                 },
-                TraitConfig::map_available_traits(
-                    new_trait.values.clone(),
-                    new_trait.action == TraitAction::Add,
-                ),
+                TraitConfig::map_available_traits(new_trait.values.clone()),
             );
         }
 

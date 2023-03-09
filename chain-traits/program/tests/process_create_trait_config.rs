@@ -6,7 +6,7 @@ use crate::utils::{
     store_trait_config, UriMetadata,
 };
 use chain_traits::{
-    instruction::{CreateTraitConfigArgs, TraitAction},
+    instruction::{CreateTraitConfigArgs, TraitAction, TraitValueAction},
     state::{find_trait_config_address, TraitConfig, TraitConfigKey},
 };
 use solana_program::pubkey::Pubkey;
@@ -116,9 +116,17 @@ pub async fn process_update_trait_config() {
     .unwrap();
 
     let traits: Vec<CreateTraitConfigArgs> = vec![CreateTraitConfigArgs {
-        action: TraitAction::Add,
         name: "Weapon".to_string(),
-        values: vec!["Sword".to_string(), "Gun".to_string()],
+        values: vec![
+            TraitValueAction {
+                name: "Sword".to_string(),
+                action: TraitAction::Add,
+            },
+            TraitValueAction {
+                name: "Gun".to_string(),
+                action: TraitAction::Add,
+            },
+        ],
     }];
 
     store_trait_config(context, &nft_data.0, &nft_metadata.0, traits)
@@ -163,7 +171,7 @@ pub async fn process_remove_trait_from_config() {
 
     let mut traits = UriMetadata::get_traits();
 
-    traits.get_mut(0).unwrap().action = TraitAction::Remove;
+    traits.get_mut(0).unwrap().values.get_mut(0).unwrap().action = TraitAction::Remove;
 
     store_trait_config(
         context,
@@ -178,8 +186,6 @@ pub async fn process_remove_trait_from_config() {
 
     let trait_config_account =
         deserialize_account_info::<TraitConfig>(context, &trait_config_key.0).await;
-
-    println!("{:?}", trait_config_account);
 
     assert_eq!(
         trait_config_account

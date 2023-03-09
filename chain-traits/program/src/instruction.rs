@@ -74,7 +74,12 @@ pub enum TraitInstruction {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct CreateTraitConfigArgs {
     pub name: String,
-    pub values: Vec<String>,
+    pub values: Vec<TraitValueAction>,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
+pub struct TraitValueAction {
+    pub name: String,
     pub action: TraitAction,
 }
 

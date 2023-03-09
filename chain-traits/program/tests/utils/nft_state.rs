@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chain_traits::{
-    instruction::CreateTraitConfigArgs,
+    instruction::{CreateTraitConfigArgs, TraitAction, TraitValueAction},
     state::{AvailableTrait, TraitConfigKey},
 };
 use serde::{Deserialize, Serialize};
@@ -37,39 +37,59 @@ impl UriMetadata {
     pub fn get_traits() -> Vec<CreateTraitConfigArgs> {
         vec![
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Background".to_string(),
-                values: vec!["Vanilla Ice".to_string()],
+                values: vec![
+                    TraitValueAction {
+                        name: "Vanilla Ice".to_string(),
+                        action: TraitAction::Add,
+                    },
+                    TraitValueAction {
+                        name: "Ruby Red".to_string(),
+                        action: TraitAction::Add,
+                    },
+                ],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Clothes".to_string(),
-                values: vec!["Nice Overalls".to_string()],
+                values: vec![TraitValueAction {
+                    name: "Nice Overalls".to_string(),
+                    action: TraitAction::Add,
+                }],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Eyewear".to_string(),
-                values: vec!["Nouns".to_string()],
+                values: vec![TraitValueAction {
+                    name: "Nouns".to_string(),
+                    action: TraitAction::Add,
+                }],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Face".to_string(),
-                values: vec!["Smirk".to_string()],
+                values: vec![TraitValueAction {
+                    action: TraitAction::Add,
+                    name: "Smirk".to_string(),
+                }],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Fur".to_string(),
-                values: vec!["Eggnog".to_string()],
+                values: vec![TraitValueAction {
+                    action: TraitAction::Add,
+                    name: "Eggnog".to_string(),
+                }],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "Head".to_string(),
-                values: vec!["Spiky Hair".to_string()],
+                values: vec![TraitValueAction {
+                    action: TraitAction::Add,
+                    name: "Spiky Hair".to_string(),
+                }],
             },
             CreateTraitConfigArgs {
-                action: chain_traits::instruction::TraitAction::Add,
                 name: "1/1".to_string(),
-                values: vec!["None".to_string()],
+                values: vec![TraitValueAction {
+                    action: TraitAction::Add,
+                    name: "None".to_string(),
+                }],
             },
         ]
     }
@@ -88,7 +108,7 @@ impl UriMetadata {
                     trait_values.insert(
                         index as u8,
                         AvailableTrait {
-                            value: v.clone(),
+                            value: v.name.clone(),
                             is_active: true,
                         },
                     );
