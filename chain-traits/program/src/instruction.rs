@@ -145,34 +145,16 @@ pub fn create_trait_config(
 
 pub fn create_trait(
     program_id: &Pubkey,
-    mint: &Pubkey,
-    mint_metadata: &Pubkey,
     trait_config: &Pubkey,
     payer: &Pubkey,
     traits: Vec<Vec<CreateTraitArgs>>,
+    nft_data: Vec<NftData>,
 ) -> Instruction {
-    let (trait_account, _) = find_trait_data_address(trait_config, mint);
-
-    let create_trait_accounts: Vec<AccountMeta> = vec![
-        AccountMeta {
-            is_signer: false,
-            is_writable: false,
-            pubkey: *mint,
-        },
-        AccountMeta {
-            is_signer: false,
-            is_writable: false,
-            pubkey: *mint_metadata,
-        },
+    let mut create_trait_accounts: Vec<AccountMeta> = vec![
         AccountMeta {
             is_signer: false,
             is_writable: false,
             pubkey: *trait_config,
-        },
-        AccountMeta {
-            is_signer: false,
-            is_writable: true,
-            pubkey: trait_account,
         },
         AccountMeta {
             is_signer: true,
@@ -191,6 +173,28 @@ pub fn create_trait(
         },
     ];
 
+    for nft_data in nft_data.iter() {
+        let (trait_data_address, _) = find_trait_data_address(&trait_config, &nft_data.nft_mint);
+
+        create_trait_accounts.push(AccountMeta {
+            pubkey: nft_data.nft_metadata,
+            is_signer: false,
+            is_writable: false,
+        });
+
+        create_trait_accounts.push(AccountMeta {
+            pubkey: trait_data_address,
+            is_signer: false,
+            is_writable: true,
+        });
+
+        create_trait_accounts.push(AccountMeta {
+            pubkey: nft_data.nft_mint,
+            is_signer: false,
+            is_writable: false,
+        });
+    }
+
     let data = TraitInstruction::CreateTrait { data: traits }
         .try_to_vec()
         .unwrap();
@@ -200,4 +204,10 @@ pub fn create_trait(
         accounts: create_trait_accounts,
         data,
     }
+}
+
+#[derive(BorshDeserialize, BorshSerialize)]
+pub struct NftData {
+    pub nft_mint: Pubkey,
+    pub nft_metadata: Pubkey,
 }

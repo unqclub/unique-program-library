@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 use chain_traits::instruction::{
-    create_trait, create_trait_config, CreateTraitArgs, CreateTraitConfigArgs,
+    create_trait, create_trait_config, CreateTraitArgs, CreateTraitConfigArgs, NftData,
 };
 use chain_traits::state::TraitConfig;
 use solana_program::borsh::try_from_slice_unchecked;
@@ -73,11 +73,13 @@ pub async fn store_nft_trait(
 
     let store_trait_ix = create_trait(
         &chain_traits::id(),
-        nft_mint,
-        nft_metadata,
         trait_config,
         &update_authority.pubkey(),
         traits,
+        vec![NftData {
+            nft_metadata: *nft_metadata,
+            nft_mint: *nft_mint,
+        }],
     );
 
     let tx = Transaction::new_signed_with_payer(
@@ -190,11 +192,13 @@ pub async fn mint_and_store_trait(
 
     let create_traits_ix = create_trait(
         &chain_traits::id(),
-        &mint.pubkey(),
-        &metadata,
         trait_config,
         &payer.pubkey(),
         traits,
+        vec![NftData {
+            nft_metadata: metadata,
+            nft_mint: mint.pubkey(),
+        }],
     );
 
     tx_instructions.push(create_traits_ix);
