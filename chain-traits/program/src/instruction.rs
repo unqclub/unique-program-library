@@ -41,29 +41,21 @@ pub enum TraitInstruction {
     #[account(4, name = "system_program")]
     CreateTraitConfig { data: Vec<CreateTraitConfigArgs> },
 
-    #[account(0, name = "nft_mint", desc = "Mint of nft")]
-    #[account(1, name = "nft_metadata", desc = "Metadata of nft")]
     #[account(
-        2,
+        0,
         name = "trait_config_account",
         desc = "Account used for storing trait config on-chain"
     )]
     #[account(
-        3,
-        writable,
-        name = "trait_account",
-        desc = "Account used for storing traits for nft on-chain"
-    )]
-    #[account(
-        4,
+        1,
         name = "payer",
         writable,
         desc = "Signer of transaction (update authority or holder in case of mint)",
         signer
     )]
-    #[account(5, name = "system_program")]
+    #[account(2, name = "system_program")]
     #[account(
-        6,
+        3,
         name = "instruction_sysvar",
         opt,
         desc = "Sysvar defining instruction of same transaction"
