@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use chain_traits::{
-    instruction::{CreateTraitConfigArgs, TraitAction, TraitValueAction},
-    state::{AvailableTrait, TraitConfigKey},
+    instruction::{CreateTraitArgs, CreateTraitConfigArgs, TraitAction, TraitValueAction},
+    state::{AvailableTrait, TraitConfig, TraitConfigKey},
 };
 use serde::{Deserialize, Serialize};
 
@@ -45,6 +45,10 @@ impl UriMetadata {
                     },
                     TraitValueAction {
                         name: "Ruby Red".to_string(),
+                        action: TraitAction::Add,
+                    },
+                    TraitValueAction {
+                        name: "Marshmallow".to_string(),
                         action: TraitAction::Add,
                     },
                 ],
@@ -124,5 +128,27 @@ impl UriMetadata {
             });
 
         trait_map
+    }
+
+    pub fn map_to_args(&self, trait_config: TraitConfig) -> Vec<CreateTraitArgs> {
+        let mut trait_args: Vec<CreateTraitArgs> = Vec::new();
+
+        self.attributes.iter().for_each(|attr| {
+            let found_trait = trait_config
+                .available_traits
+                .iter()
+                .find(|t| t.0.name == attr.trait_type)
+                .unwrap();
+            trait_args.push(CreateTraitArgs {
+                name: found_trait.0.id,
+                value: *found_trait
+                    .1
+                    .iter()
+                    .find(|trait_value| trait_value.1.value == attr.value)
+                    .unwrap()
+                    .0,
+            })
+        });
+        trait_args
     }
 }

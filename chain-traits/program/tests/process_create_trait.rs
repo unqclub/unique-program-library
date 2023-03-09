@@ -1,55 +1,58 @@
-// mod utils;
+mod utils;
 
-// use crate::utils::UriMetadata;
-// use chain_traits::state::find_trait_config_address;
-// use solana_program::native_token::LAMPORTS_PER_SOL;
-// use solana_program_test::tokio;
-// use solana_sdk::{signature::Keypair, signer::Signer};
-// use utils::{
-//     airdrop_funds, create_account, create_and_verify_nft, create_nft_mint, fetch_nft_json,
-//     mint_and_store_trait, store_nft_trait, store_trait_config,
-// };
+use crate::utils::UriMetadata;
+use chain_traits::state::{find_trait_config_address, TraitConfig};
+use solana_program_test::tokio;
+use utils::{
+    create_and_verify_nft, create_nft_mint, deserialize_account_info, fetch_nft_json,
+    store_nft_trait, store_trait_config,
+};
 
-// #[tokio::test]
-// pub async fn process_create_trait_happy_path() {
-//     let context = &mut utils::program_test().start_with_context().await;
+#[tokio::test]
+pub async fn process_create_trait_happy_path() {
+    let context = &mut utils::program_test().start_with_context().await;
 
-//     let (collection_mint, _) = create_nft_mint(context).await;
+    let (collection_mint, _) = create_nft_mint(context).await;
 
-//     let collection_metadata =
-//         create_and_verify_nft(context, &collection_mint, None, true, None).await;
+    let collection_metadata =
+        create_and_verify_nft(context, &collection_mint, None, true, None).await;
 
-//     let (nft_mint, _) = create_nft_mint(context).await;
+    let (nft_mint, _) = create_nft_mint(context).await;
 
-//     let nft_metadata =
-//         create_and_verify_nft(context, &nft_mint, Some(collection_mint), true, None).await;
+    let nft_metadata =
+        create_and_verify_nft(context, &nft_mint, Some(collection_mint), true, None).await;
 
-//     store_trait_config(
-//         context,
-//         &collection_mint,
-//         &collection_metadata.0,
-//         UriMetadata::get_traits(),
-//     )
-//     .await
-//     .unwrap();
+    store_trait_config(
+        context,
+        &collection_mint,
+        &collection_metadata.0,
+        UriMetadata::get_traits(),
+    )
+    .await
+    .unwrap();
 
-//     let trait_config_address = find_trait_config_address(&collection_mint).0;
+    let trait_config_address = find_trait_config_address(&collection_mint);
 
-//     let uri_metadata = fetch_nft_json("https://metadata.y00ts.com/y/14999.json").await;
+    let trait_config_account =
+        deserialize_account_info::<TraitConfig>(context, &trait_config_address.0).await;
 
-//     let create_trait_args = uri_metadata.map_to_args();
+    let trait_config_address = find_trait_config_address(&collection_mint).0;
 
-//     store_nft_trait(
-//         context,
-//         &nft_mint,
-//         &nft_metadata.0,
-//         &trait_config_address,
-//         create_trait_args,
-//         None,
-//     )
-//     .await
-//     .unwrap();
-// }
+    let uri_metadata = fetch_nft_json("https://metadata.y00ts.com/y/14999.json").await;
+
+    let create_trait_args = uri_metadata.map_to_args(trait_config_account);
+
+    store_nft_trait(
+        context,
+        &nft_mint,
+        &nft_metadata.0,
+        &trait_config_address,
+        vec![create_trait_args],
+        None,
+    )
+    .await
+    .unwrap();
+}
 
 // #[tokio::test]
 // pub async fn process_save_traits_non_update_authority() {

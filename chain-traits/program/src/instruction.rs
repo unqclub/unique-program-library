@@ -87,7 +87,6 @@ pub struct TraitValueAction {
 pub enum TraitAction {
     Add,
     Remove,
-    Modify,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]

@@ -172,12 +172,31 @@ pub async fn process_remove_trait_from_config() {
     let mut traits = UriMetadata::get_traits();
 
     traits.get_mut(0).unwrap().values.get_mut(0).unwrap().action = TraitAction::Remove;
+    traits.get_mut(0).unwrap().values.push(TraitValueAction {
+        name: "Grey Goose".to_string(),
+        action: TraitAction::Add,
+    });
 
     store_trait_config(
         context,
         &nft_data.0,
         &nft_metadata.0,
-        vec![traits.get(0).unwrap().clone()],
+        vec![
+            traits.get(0).unwrap().clone(),
+            CreateTraitConfigArgs {
+                name: "Candy".to_string(),
+                values: vec![
+                    TraitValueAction {
+                        name: "Gummy Bear".to_string(),
+                        action: TraitAction::Add,
+                    },
+                    TraitValueAction {
+                        name: "Sugar Candy".to_string(),
+                        action: TraitAction::Remove,
+                    },
+                ],
+            },
+        ],
     )
     .await
     .unwrap();

@@ -24,7 +24,7 @@ pub fn process_instruction<'a>(
             process_create_trait_config(program_id, accounts, data)
         }
         TraitInstruction::CreateTrait { data } => {
-            msg!("IX:Create trait");
+            msg!("IX:Create trait data");
 
             process_create_trait(program_id, accounts, data)
         }
