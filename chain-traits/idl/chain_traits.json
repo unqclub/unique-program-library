@@ -1,0 +1,332 @@
+{
+  "version": "0.1.0",
+  "name": "chain_traits",
+  "instructions": [
+    {
+      "name": "CreateTraitConfig",
+      "accounts": [
+        {
+          "name": "collection",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection or first creator of collection"
+        },
+        {
+          "name": "traitConfigAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Account used for storing trait config on-chain"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Signer of transaction(update authority of collection)"
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Metadata account of collection NFT or NFT from collection"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "vec": {
+              "defined": "CreateTraitConfigArgs"
+            }
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateTrait",
+      "accounts": [
+        {
+          "name": "traitConfigAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Account used for storing trait config on-chain"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Signer of transaction (update authority or holder in case of mint)"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructionSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Sysvar defining instruction of same transaction",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "vec": {
+              "vec": {
+                "defined": "CreateTraitArgs"
+              }
+            }
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "TraitConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collection",
+            "type": "publicKey"
+          },
+          {
+            "name": "updateAuthoirty",
+            "type": "publicKey"
+          },
+          {
+            "name": "lastModified",
+            "type": "i64"
+          },
+          {
+            "name": "availableTraits",
+            "type": {
+              "hashMap": [
+                {
+                  "defined": "TraitConfigKey"
+                },
+                {
+                  "hashMap": [
+                    "u8",
+                    {
+                      "defined": "AvailableTrait"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraitData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "traitConfig",
+            "type": "publicKey"
+          },
+          {
+            "name": "nftMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "lastModified",
+            "type": "i64"
+          },
+          {
+            "name": "traits",
+            "type": {
+              "hashMap": [
+                "u8",
+                "u8"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CreateTraitConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "values",
+            "type": {
+              "hashMap": [
+                "u8",
+                {
+                  "defined": "AvailableTrait"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraitValueAction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "type": {
+              "defined": "TraitAction"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateTraitArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "u8"
+          },
+          {
+            "name": "value",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nftMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "nftMetadata",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraitConfigKey",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AvailableTrait",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "value",
+            "type": "string"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TraitAction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Add"
+          },
+          {
+            "name": "Remove"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidCollection",
+      "msg": "Metadata is not related to provided collection"
+    },
+    {
+      "code": 1,
+      "name": "NotUpdateAuthority",
+      "msg": "Signer is not update authority of collection"
+    },
+    {
+      "code": 2,
+      "name": "TraitConfigNotInitialized",
+      "msg": "Trait config not initialized"
+    },
+    {
+      "code": 3,
+      "name": "WrongAuthorityToCreateTrait",
+      "msg": "You don't have authority to store traits on chain!"
+    },
+    {
+      "code": 4,
+      "name": "TraitDoesNotExist",
+      "msg": "Trait does not exist in trait config"
+    },
+    {
+      "code": 5,
+      "name": "InvalidAccountSeeds",
+      "msg": "Invalid account seeds"
+    },
+    {
+      "code": 6,
+      "name": "TraitAlreadyExists",
+      "msg": "Trait already exists"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "CNn3iDUnYEM4e8HCaRjPxxNtT89LsxWwAqtHBp9Fm5z6",
+    "binaryVersion": "0.0.12",
+    "libVersion": "0.0.12"
+  }
+}

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
@@ -9,7 +9,7 @@ use solana_program::{
 };
 
 use crate::{
-    state::{find_trait_config_address, find_trait_data_address},
+    state::{find_trait_config_address, find_trait_data_address, AvailableTrait},
     utils::SYSVAR_INSTRUCTIONS,
 };
 
@@ -66,7 +66,7 @@ pub enum TraitInstruction {
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct CreateTraitConfigArgs {
     pub name: String,
-    pub values: Vec<TraitValueAction>,
+    pub values: HashMap<u8, AvailableTrait>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]

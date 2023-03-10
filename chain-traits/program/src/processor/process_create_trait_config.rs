@@ -65,7 +65,7 @@ pub fn process_create_trait_config<'a>(
     );
     if trait_config.data_is_empty() {
         let trait_map: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> =
-            TraitConfig::traits_to_map(data);
+            TraitConfig::traits_to_map(&data);
 
         let trait_map_len = trait_map.try_to_vec().unwrap().len();
         create_program_account(
@@ -99,37 +99,46 @@ pub fn process_create_trait_config<'a>(
             let existing_trait = trait_config_account
                 .available_traits
                 .iter()
-                .find(|trait_config| trait_config.0.name == new_trait.name);
-            let index = if let Some(existing_trait) = existing_trait {
-                existing_trait.0.id
-            } else {
-                trait_config_account.available_traits.len() as u8
-            };
+                .find(|v| v.0.name == new_trait.name);
+
+            let (index, traits) =
+                if let Some((exiting_index, existing_trait_values)) = existing_trait {
+                    let mut new_trait_values = existing_trait_values.clone();
+                    for (index, available_trait) in new_trait.values.iter() {
+                        new_trait_values.insert(*index, available_trait.clone());
+                    }
+
+                    (exiting_index.id, new_trait_values)
+                } else {
+                    (
+                        (trait_config_account.available_traits.len() as u8),
+                        new_trait.values.clone(),
+                    )
+                };
 
             trait_config_account.available_traits.insert(
                 TraitConfigKey {
                     name: new_trait.name.clone(),
                     id: index,
                 },
-                TraitConfig::map_available_traits(new_trait.values.clone()),
+                traits,
             );
         }
 
-        let realloc_data_len = trait_config_account
+        if let Some(realloc_data_len) = trait_config_account
             .try_to_vec()
             .unwrap()
             .len()
             .checked_sub(data_len)
-            .unwrap();
-
-        transfer_lamports(
-            update_autority,
-            trait_config,
-            Rent::default().minimum_balance(realloc_data_len),
-            system_program,
-        )?;
-
-        trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
+        {
+            transfer_lamports(
+                update_autority,
+                trait_config,
+                Rent::default().minimum_balance(realloc_data_len),
+                system_program,
+            )?;
+            trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
+        }
         trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
     }
 

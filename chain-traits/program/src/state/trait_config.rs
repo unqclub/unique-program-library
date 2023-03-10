@@ -27,41 +27,26 @@ impl TraitConfig {
     pub const LEN: usize = 32 + 32 + 8;
 
     pub fn traits_to_map(
-        traits: Vec<CreateTraitConfigArgs>,
+        traits: &Vec<CreateTraitConfigArgs>,
     ) -> HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> {
         let mut trait_map: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> = HashMap::new();
         traits
             .iter()
             .enumerate()
             .for_each(|(name_index, trait_info)| {
-                let mut values_map: HashMap<u8, AvailableTrait> = HashMap::new();
-
-                trait_info
-                    .values
-                    .iter()
-                    .enumerate()
-                    .for_each(|(index, value)| {
-                        values_map.insert(
-                            index as u8,
-                            AvailableTrait {
-                                value: value.name.clone(),
-                                is_active: value.action == TraitAction::Add,
-                            },
-                        );
-                    });
                 trait_map.insert(
                     TraitConfigKey {
                         id: name_index as u8,
                         name: trait_info.name.clone(),
                     },
-                    values_map,
+                    trait_info.values.clone(),
                 );
             });
 
         trait_map
     }
 
-    pub fn map_available_traits(traits: Vec<TraitValueAction>) -> HashMap<u8, AvailableTrait> {
+    pub fn map_available_traits(traits: &Vec<TraitValueAction>) -> HashMap<u8, AvailableTrait> {
         let mut available_traits: HashMap<u8, AvailableTrait> = HashMap::new();
 
         traits.iter().enumerate().for_each(|(index, value)| {
