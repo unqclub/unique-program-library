@@ -37,9 +37,9 @@ impl TraitConfig {
                 trait_map.insert(
                     TraitConfigKey {
                         id: name_index as u8,
-                        name: trait_info.name.clone(),
+                        name: *trait_info.name.clone(),
                     },
-                    trait_info.values.clone(),
+                    *trait_info.values.clone(),
                 );
             });
 

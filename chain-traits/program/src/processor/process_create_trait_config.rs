@@ -8,8 +8,10 @@ use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
+use solana_program::msg;
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
+
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -18,12 +20,12 @@ use solana_program::{
 pub fn process_create_trait_config<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    data: Vec<CreateTraitConfigArgs>,
+    data: Box<Vec<CreateTraitConfigArgs>>,
 ) -> ProgramResult {
     let account_infos = &mut accounts.iter();
 
     let collection = next_account_info(account_infos)?;
-    let trait_config = next_account_info(account_infos)?;
+    let trait_config = Box::from(next_account_info(account_infos)?);
     let update_autority = next_account_info(account_infos)?;
     let _collection_metadata = next_account_info(account_infos)?;
     let system_program = next_account_info(account_infos)?;
@@ -70,7 +72,7 @@ pub fn process_create_trait_config<'a>(
         let trait_map_len = trait_map.try_to_vec().unwrap().len();
         create_program_account(
             update_autority,
-            trait_config,
+            *trait_config,
             Some(&[
                 b"trait-config",
                 collection.key.as_ref(),
@@ -90,8 +92,12 @@ pub fn process_create_trait_config<'a>(
         trait_config_account.update_authoirty = update_autority.key.clone();
         trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
     } else {
-        let mut trait_config_account =
-            try_from_slice_unchecked::<TraitConfig>(&trait_config.data.borrow_mut())?;
+        msg!("DESERIALIZING ACC");
+        let mut trait_config_account = Box::from(try_from_slice_unchecked::<TraitConfig>(
+            &trait_config.data.borrow_mut(),
+        )?);
+
+        msg!("ACC DESERIALIZED");
 
         let data_len = trait_config.data_len();
 
@@ -99,16 +105,16 @@ pub fn process_create_trait_config<'a>(
             let existing_trait = trait_config_account
                 .available_traits
                 .iter()
-                .find(|v| v.0.name == new_trait.name);
+                .find(|v| v.0.name == *new_trait.name);
 
             let (index, traits) =
                 if let Some((exiting_index, existing_trait_values)) = existing_trait {
-                    let mut new_trait_values = existing_trait_values.clone();
+                    let mut new_trait_values = Box::from(existing_trait_values.clone());
                     for (index, available_trait) in new_trait.values.iter() {
                         new_trait_values.insert(*index, available_trait.clone());
                     }
 
-                    (exiting_index.id, new_trait_values)
+                    (exiting_index.id, Box::from(new_trait_values))
                 } else {
                     (
                         (trait_config_account.available_traits.len() as u8),
@@ -118,12 +124,13 @@ pub fn process_create_trait_config<'a>(
 
             trait_config_account.available_traits.insert(
                 TraitConfigKey {
-                    name: new_trait.name.clone(),
+                    name: *new_trait.name.clone(),
                     id: index,
                 },
-                traits,
+                *traits,
             );
         }
+        msg!("FINISHED FOR LOOP");
 
         if let Some(realloc_data_len) = trait_config_account
             .try_to_vec()
@@ -133,13 +140,21 @@ pub fn process_create_trait_config<'a>(
         {
             transfer_lamports(
                 update_autority,
-                trait_config,
+                *trait_config,
                 Rent::default().minimum_balance(realloc_data_len),
                 system_program,
             )?;
             trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
         }
-        trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
+        msg!("TRANSFERED LAMPORTS AND REALLC");
+
+        msg! {"DATA LEN{:?}",trait_config_account.try_to_vec().unwrap().len()};
+
+        // trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
+        trait_config
+            .data
+            .borrow_mut()
+            .copy_from_slice(&trait_config_account.try_to_vec().unwrap());
     }
 
     Ok(())
