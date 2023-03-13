@@ -39,9 +39,7 @@ pub enum TraitInstruction {
         desc = "Metadata account of collection NFT or NFT from collection"
     )]
     #[account(4, name = "system_program")]
-    CreateTraitConfig {
-        data: Box<Vec<CreateTraitConfigArgs>>,
-    },
+    CreateTraitConfig { data: Vec<CreateTraitConfigArgs> },
 
     #[account(
         0,
@@ -126,11 +124,9 @@ pub fn create_trait_config(
         },
     ];
 
-    let data = TraitInstruction::CreateTraitConfig {
-        data: Box::from(traits),
-    }
-    .try_to_vec()
-    .unwrap();
+    let data = TraitInstruction::CreateTraitConfig { data: traits }
+        .try_to_vec()
+        .unwrap();
 
     Instruction {
         program_id: *program_id,

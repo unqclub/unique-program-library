@@ -20,12 +20,12 @@ use solana_program::{
 pub fn process_create_trait_config<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    data: Box<Vec<CreateTraitConfigArgs>>,
+    data: Vec<CreateTraitConfigArgs>,
 ) -> ProgramResult {
     let account_infos = &mut accounts.iter();
 
     let collection = next_account_info(account_infos)?;
-    let trait_config = Box::from(next_account_info(account_infos)?);
+    let trait_config = next_account_info(account_infos)?;
     let update_autority = next_account_info(account_infos)?;
     let _collection_metadata = next_account_info(account_infos)?;
     let system_program = next_account_info(account_infos)?;
@@ -72,7 +72,7 @@ pub fn process_create_trait_config<'a>(
         let trait_map_len = trait_map.try_to_vec().unwrap().len();
         create_program_account(
             update_autority,
-            *trait_config,
+            trait_config,
             Some(&[
                 b"trait-config",
                 collection.key.as_ref(),
@@ -92,69 +92,62 @@ pub fn process_create_trait_config<'a>(
         trait_config_account.update_authoirty = update_autority.key.clone();
         trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
     } else {
-        msg!("DESERIALIZING ACC");
         let mut trait_config_account = Box::from(try_from_slice_unchecked::<TraitConfig>(
             &trait_config.data.borrow_mut(),
         )?);
 
-        msg!("ACC DESERIALIZED");
+        msg!("DATA LEN:{:?}", trait_config.data_len());
+        // let initial_account_size = trait_config.data_len();
 
-        let data_len = trait_config.data_len();
+        let data_iter = Box::from(data.into_iter());
 
-        for new_trait in data.iter() {
+        for new_trait in data_iter {
             let existing_trait = trait_config_account
                 .available_traits
-                .iter()
+                .iter_mut()
                 .find(|v| v.0.name == *new_trait.name);
 
-            let (index, traits) =
-                if let Some((exiting_index, existing_trait_values)) = existing_trait {
-                    let mut new_trait_values = Box::from(existing_trait_values.clone());
-                    for (index, available_trait) in new_trait.values.iter() {
-                        new_trait_values.insert(*index, available_trait.clone());
-                    }
-
-                    (exiting_index.id, Box::from(new_trait_values))
-                } else {
-                    (
-                        (trait_config_account.available_traits.len() as u8),
-                        new_trait.values.clone(),
-                    )
-                };
-
-            trait_config_account.available_traits.insert(
-                TraitConfigKey {
-                    name: *new_trait.name.clone(),
-                    id: index,
-                },
-                *traits,
-            );
+            if let Some((_exiting_index, existing_trait_values)) = existing_trait {
+                new_trait.values.iter().for_each(|(index, value)| {
+                    existing_trait_values.insert(*index, value.clone());
+                });
+            } else {
+                trait_config_account.available_traits.insert(
+                    TraitConfigKey {
+                        name: *new_trait.name.clone(),
+                        id: trait_config_account.available_traits.len() as u8,
+                    },
+                    *new_trait.values,
+                );
+            };
         }
-        msg!("FINISHED FOR LOOP");
 
-        if let Some(realloc_data_len) = trait_config_account
-            .try_to_vec()
-            .unwrap()
-            .len()
-            .checked_sub(data_len)
-        {
-            transfer_lamports(
-                update_autority,
-                *trait_config,
-                Rent::default().minimum_balance(realloc_data_len),
-                system_program,
-            )?;
-            trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
-        }
-        msg!("TRANSFERED LAMPORTS AND REALLC");
+        // let mut serialized_data: Vec<u8> = Vec::new();
 
-        msg! {"DATA LEN{:?}",trait_config_account.try_to_vec().unwrap().len()};
+        // let serialized_data = trait_config_account.try_to_vec()?;
+
+        // trait_config_account
+        //     .serialize(&mut serialized_data)
+        //     .unwrap();
+
+        // msg!("DATA SERIALIZED");
+        let mut buffer = Vec::with_capacity(6000);
+        trait_config_account.serialize(&mut buffer)?;
+
+        // if let Some(new_len) = new_size.checked_sub(trait_config.data_len()) {
+        transfer_lamports(
+            update_autority,
+            trait_config,
+            Rent::default().minimum_balance(buffer.len()),
+            system_program,
+        )?;
+        trait_config.realloc(buffer.len(), false)?;
+        msg!("REALLOC");
+        // }
 
         // trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
-        trait_config
-            .data
-            .borrow_mut()
-            .copy_from_slice(&trait_config_account.try_to_vec().unwrap());
+        trait_config.try_borrow_mut_data()?.copy_from_slice(&buffer);
+        msg!("ACC SERIALIZED");
     }
 
     Ok(())
