@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::{collections::HashMap, ops::DerefMut};
 
 use borsh::BorshSerialize;
@@ -24,13 +25,10 @@ use crate::{
 pub fn process_create_trait<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    data: Vec<CreateTraitArgs>,
+    data: Vec<Vec<CreateTraitArgs>>,
 ) -> ProgramResult {
     let account_infos = &mut accounts.iter();
-    let nft_mint_info = next_account_info(account_infos)?;
-    let _nft_metadata_info = next_account_info(account_infos)?;
     let trait_config_account_info = next_account_info(account_infos)?;
-    let trait_account_info = next_account_info(account_infos)?;
     let payer = next_account_info(account_infos)?;
     let system_program = next_account_info(account_infos)?;
     let instructon_sysvar = next_account_info(account_infos)?;
@@ -70,92 +68,96 @@ pub fn process_create_trait<'a>(
     //     );
     // }
 
-    if *payer.key != trait_config.update_authoirty {
-        let mut mint_to_executed = false;
-        for i in 0..instruction_index {
-            let instruction = load_instruction_at_checked(i.into(), instructon_sysvar)?;
-            if instruction.program_id == spl_token::id()
-                && instruction.accounts.get(0).unwrap().pubkey == *nft_mint_info.key
-            {
-                mint_to_executed = true;
-                break;
+    for (index, (_nft_metadata_info, trait_account_info, nft_mint_info)) in
+        account_infos.tuples().enumerate()
+    {
+        if *payer.key != trait_config.update_authoirty {
+            let mut mint_to_executed = false;
+            for i in 0..instruction_index {
+                let instruction = load_instruction_at_checked(i.into(), instructon_sysvar)?;
+                if instruction.program_id == spl_token::id()
+                    && instruction.accounts.get(0).unwrap().pubkey == *nft_mint_info.key
+                {
+                    mint_to_executed = true;
+                    break;
+                }
             }
+
+            assert!(
+                mint_to_executed,
+                "{:?}",
+                TraitError::WrongAuthorityToCreateTrait
+            );
         }
+
+        let mut trait_map: HashMap<String, String> = HashMap::new();
+        for trait_data in data.get(index).unwrap() {
+            if let Some(available_trait) = trait_config.available_traits.get(&trait_data.name) {
+                let found_trait = available_trait
+                    .iter()
+                    .find(|item| item.value == trait_data.value && item.is_active);
+                assert!(found_trait.is_some(), "{:?}", TraitError::TraitDoesNotExist);
+            } else {
+                return Err(TraitError::TraitDoesNotExist.into());
+            }
+            trait_map.insert(trait_data.name.clone(), trait_data.value.clone());
+        }
+        let (trait_account_address, trait_account_bump) = Pubkey::find_program_address(
+            &TraitData::get_trait_data_seeds(nft_mint_info.key, trait_config_account_info.key),
+            program_id,
+        );
 
         assert!(
-            mint_to_executed,
+            trait_account_address == *trait_account_info.key,
             "{:?}",
-            TraitError::WrongAuthorityToCreateTrait
+            TraitError::InvalidAccountSeeds
         );
-    }
 
-    let mut trait_map: HashMap<String, String> = HashMap::new();
-    for trait_data in data.iter() {
-        if let Some(available_trait) = trait_config.available_traits.get(&trait_data.name) {
-            let found_trait = available_trait
-                .iter()
-                .find(|item| item.value == trait_data.value && item.is_active);
-            assert!(found_trait.is_some(), "{:?}", TraitError::TraitDoesNotExist);
-        } else {
-            return Err(TraitError::TraitDoesNotExist.into());
-        }
-        trait_map.insert(trait_data.name.clone(), trait_data.value.clone());
-    }
-    let (trait_account_address, trait_account_bump) = Pubkey::find_program_address(
-        &TraitData::get_trait_data_seeds(nft_mint_info.key, trait_config_account_info.key),
-        program_id,
-    );
-
-    assert!(
-        trait_account_address == *trait_account_info.key,
-        "{:?}",
-        TraitError::InvalidAccountSeeds
-    );
-
-    if trait_account_info.data_is_empty() {
-        create_program_account(
-            payer,
-            trait_account_info,
-            Some(&[
-                b"trait-data",
-                nft_mint_info.key.as_ref(),
-                trait_config_account_info.key.as_ref(),
-                &[trait_account_bump],
-            ]),
-            program_id,
-            (TraitData::LEN + trait_map.try_to_vec().unwrap().len()) as u64,
-            system_program,
-        )?;
-        let mut trait_account =
-            try_from_slice_unchecked::<TraitData>(&trait_account_info.data.borrow())?;
-        trait_account.nft_mint = *nft_mint_info.key;
-        trait_account.last_modified = Clock::get().unwrap().unix_timestamp;
-        trait_account.traits = trait_map;
-        trait_account.trait_config = *trait_config_account_info.key;
-        trait_account.serialize(trait_account_info.try_borrow_mut_data()?.deref_mut())?;
-    } else {
-        let mut trait_account =
-            try_from_slice_unchecked::<TraitData>(&trait_account_info.data.borrow())?;
-        trait_map.iter_mut().for_each(|(key, value)| {
-            trait_account.traits.insert(key.clone(), value.clone());
-        });
-        let realloc_data_len = trait_account
-            .try_to_vec()
-            .unwrap()
-            .len()
-            .checked_sub(trait_account_info.data_len())
-            .unwrap();
-        if realloc_data_len > 0 {
-            transfer_lamports(
+        if trait_account_info.data_is_empty() {
+            create_program_account(
                 payer,
                 trait_account_info,
-                Rent::default().minimum_balance(realloc_data_len),
+                Some(&[
+                    b"trait-data",
+                    nft_mint_info.key.as_ref(),
+                    trait_config_account_info.key.as_ref(),
+                    &[trait_account_bump],
+                ]),
+                program_id,
+                (TraitData::LEN + trait_map.try_to_vec().unwrap().len()) as u64,
                 system_program,
             )?;
-            trait_account_info.realloc(trait_account.try_to_vec().unwrap().len(), false)?;
+            let mut trait_account =
+                try_from_slice_unchecked::<TraitData>(&trait_account_info.data.borrow())?;
+            trait_account.nft_mint = *nft_mint_info.key;
+            trait_account.last_modified = Clock::get().unwrap().unix_timestamp;
+            trait_account.traits = trait_map;
+            trait_account.trait_config = *trait_config_account_info.key;
             trait_account.serialize(trait_account_info.try_borrow_mut_data()?.deref_mut())?;
-        }
-    };
+        } else {
+            let mut trait_account =
+                try_from_slice_unchecked::<TraitData>(&trait_account_info.data.borrow())?;
+            trait_map.iter_mut().for_each(|(key, value)| {
+                trait_account.traits.insert(key.clone(), value.clone());
+            });
+            let realloc_data_len = trait_account
+                .try_to_vec()
+                .unwrap()
+                .len()
+                .checked_sub(trait_account_info.data_len())
+                .unwrap();
+            if realloc_data_len > 0 {
+                transfer_lamports(
+                    payer,
+                    trait_account_info,
+                    Rent::default().minimum_balance(realloc_data_len),
+                    system_program,
+                )?;
+                trait_account_info.realloc(trait_account.try_to_vec().unwrap().len(), false)?;
+                trait_account.serialize(trait_account_info.try_borrow_mut_data()?.deref_mut())?;
+            }
+        };
+    }
 
     Ok(())
 }
