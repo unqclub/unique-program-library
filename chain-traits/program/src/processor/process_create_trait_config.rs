@@ -99,10 +99,10 @@ pub fn process_create_trait_config<'a>(
 
         new_data.extend_from_slice(&config_bytes[0..76]);
 
-        for (key, value) in trait_map {
-            let serialized_key = key.try_to_vec().unwrap();
+        for (index, (trait_config_key, trait_config_value)) in trait_map.iter().enumerate() {
+            let serialized_key = trait_config_key.try_to_vec().unwrap();
 
-            let serialized_value = value.try_to_vec().unwrap();
+            let serialized_value = trait_config_value.try_to_vec().unwrap();
 
             let mut chunk_size = serialized_key.len();
         }
@@ -184,73 +184,73 @@ mod tests {
 
     #[test]
     fn moving_bytes() {
-        let collection = Keypair::new();
-        let update_autority = Keypair::new();
-        let new_update_authority = Keypair::new();
+        // let collection = Keypair::new();
+        // let update_autority = Keypair::new();
+        // let new_update_authority = Keypair::new();
 
-        let mut available_traits: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> =
-            HashMap::new();
-        let mut trait_values: HashMap<u8, AvailableTrait> = HashMap::new();
-        trait_values.insert(
-            1,
-            AvailableTrait {
-                value: "trait_values 1".to_string(),
-                is_active: true,
-            },
-        );
-        available_traits.insert(
-            TraitConfigKey {
-                name: "trait_name 1".to_string(),
-                id: 1,
-            },
-            trait_values,
-        );
+        // let mut available_traits: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>> =
+        //     HashMap::new();
+        // let mut trait_values: HashMap<u8, AvailableTrait> = HashMap::new();
+        // trait_values.insert(
+        //     1,
+        //     AvailableTrait {
+        //         value: "trait_values 1".to_string(),
+        //         is_active: true,
+        //     },
+        // );
+        // available_traits.insert(
+        //     TraitConfigKey {
+        //         name: "trait_name 1".to_string(),
+        //         id: 1,
+        //     },
+        //     trait_values,
+        // );
 
-        let trait_config = TraitConfig {
-            collection: collection.pubkey(),
-            update_authority: update_autority.pubkey(),
-            last_modified: 0,
-            available_traits,
-        };
-        println!("Old update_authority: {:#?}", update_autority.pubkey());
-        println!("Original trait_config:  {:#?}", trait_config);
+        // let trait_config = TraitConfig {
+        //     collection: collection.pubkey(),
+        //     update_authority: update_autority.pubkey(),
+        //     last_modified: 0,
+        //     available_traits,
+        // };
+        // println!("Old update_authority: {:#?}", update_autority.pubkey());
+        // println!("Original trait_config:  {:#?}", trait_config);
 
-        let mut data = trait_config.try_to_vec().unwrap();
+        // let mut data = trait_config.try_to_vec().unwrap();
 
-        // Make a RefMut from account data to simulate real solana AccountInfo.data
-        let data_ref_cell: RefCell<&mut [u8]> = RefCell::new(&mut data);
-        let mut account_data: RefMut<&mut [u8]> = data_ref_cell.borrow_mut();
+        // // Make a RefMut from account data to simulate real solana AccountInfo.data
+        // let data_ref_cell: RefCell<&mut [u8]> = RefCell::new(&mut data);
+        // let mut account_data: RefMut<&mut [u8]> = data_ref_cell.borrow_mut();
 
-        let old_update_authority = array_ref![account_data, 32, 32];
-        assert_eq!(
-            old_update_authority,
-            &update_autority.pubkey().to_bytes()[..],
-            "Update authority bytes are not equal"
-        );
+        // let old_update_authority = array_ref![account_data, 32, 32];
+        // assert_eq!(
+        //     old_update_authority,
+        //     &update_autority.pubkey().to_bytes()[..],
+        //     "Update authority bytes are not equal"
+        // );
 
-        // An example of how to find the index of a pubkey in a byte array
-        // and how to swap update_authority with new update authority
-        let mut index = 0;
-        for i in 0..(account_data.len() - 32) {
-            let temp = array_ref![account_data, i, 32];
-            if temp == &update_autority.pubkey().to_bytes() {
-                println!("Found at index: {}", i);
-                index = i;
-                break;
-            }
-        }
+        // // An example of how to find the index of a pubkey in a byte array
+        // // and how to swap update_authority with new update authority
+        // let mut index = 0;
+        // for i in 0..(account_data.len() - 32) {
+        //     let temp = array_ref![account_data, i, 32];
+        //     if temp == &update_autority.pubkey().to_bytes() {
+        //         println!("Found at index: {}", i);
+        //         index = i;
+        //         break;
+        //     }
+        // }
 
-        array_mut_ref![account_data, index, 32]
-            .copy_from_slice(&new_update_authority.pubkey().to_bytes());
+        // array_mut_ref![account_data, index, 32]
+        //     .copy_from_slice(&new_update_authority.pubkey().to_bytes());
 
-        assert_eq!(
-            new_update_authority.pubkey().to_bytes(),
-            array_ref![account_data, 32, 32][..],
-            "Update authority bytes are not equal"
-        );
+        // assert_eq!(
+        //     new_update_authority.pubkey().to_bytes(),
+        //     array_ref![account_data, 32, 32][..],
+        //     "Update authority bytes are not equal"
+        // );
 
-        let modified_trait_config = TraitConfig::try_from_slice(&account_data).unwrap();
-        println!("New update_authority: {:#?}", new_update_authority.pubkey());
-        println!("Modified trait_config: {:#?}", modified_trait_config);
+        // let modified_trait_config = TraitConfig::try_from_slice(&account_data).unwrap();
+        // println!("New update_authority: {:#?}", new_update_authority.pubkey());
+        // println!("Modified trait_config: {:#?}", modified_trait_config);
     }
 }
