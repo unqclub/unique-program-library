@@ -1,1 +1,4 @@
 program/target
+src/generated
+.crates
+./wallets
