@@ -69,7 +69,7 @@ pub fn process_create_trait<'a>(
     for (index, (_nft_metadata, trait_account_info, nft_mint_info)) in
         account_infos.tuples().enumerate()
     {
-        if *payer.key != trait_config.update_authoirty {
+        if *payer.key != trait_config.update_authority {
             let instruction_index = load_current_index_checked(instructon_sysvar)?;
 
             let mut mint_to_executed = false;
