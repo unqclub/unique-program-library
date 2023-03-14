@@ -19,6 +19,8 @@ pub struct TraitConfig {
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, PartialOrd, Eq, Hash)]
 pub struct TraitConfigKey {
+    pub key_len: u8,
+    pub values_len: u32,
     pub name: String,
     pub id: u8,
 }
@@ -36,10 +38,12 @@ impl TraitConfig {
             .for_each(|(name_index, trait_info)| {
                 trait_map.insert(
                     TraitConfigKey {
+                        values_len: trait_info.values.try_to_vec().unwrap().len() as u32,
                         id: name_index as u8,
-                        name: *trait_info.name.clone(),
+                        name: trait_info.name.clone(),
+                        key_len: 32 + 8 + trait_info.name.len() as u8,
                     },
-                    *trait_info.values.clone(),
+                    trait_info.values.clone(),
                 );
             });
 

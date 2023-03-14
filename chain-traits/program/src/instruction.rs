@@ -65,8 +65,8 @@ pub enum TraitInstruction {
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]
 pub struct CreateTraitConfigArgs {
-    pub name: Box<String>,
-    pub values: Box<HashMap<u8, AvailableTrait>>,
+    pub name: String,
+    pub values: HashMap<u8, AvailableTrait>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]

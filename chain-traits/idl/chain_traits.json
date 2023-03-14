@@ -245,6 +245,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "valuesCount",
+            "type": "u8"
+          },
+          {
             "name": "name",
             "type": "string"
           },
@@ -325,7 +329,7 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "CNn3iDUnYEM4e8HCaRjPxxNtT89LsxWwAqtHBp9Fm5z6",
+    "address": "6mSJ1Q3dYrjrir23WsZXezyHAcogQ73Pa9ZyAgtoubUj",
     "binaryVersion": "0.0.12",
     "libVersion": "0.0.12"
   }
