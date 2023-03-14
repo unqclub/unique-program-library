@@ -12,7 +12,7 @@ use crate::{
 #[derive(ShankAccount, BorshDeserialize, BorshSerialize, Clone, Debug)]
 pub struct TraitConfig {
     pub collection: Pubkey,
-    pub update_authoirty: Pubkey,
+    pub update_authority: Pubkey,
     pub last_modified: i64,
     pub available_traits: HashMap<TraitConfigKey, HashMap<u8, AvailableTrait>>,
 }
