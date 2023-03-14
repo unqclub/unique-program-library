@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "delegation-manager/program",
-    "delegation-manager/example",
-    "delegation-manager/cli",
+    # "delegation-manager/program",
+    # "delegation-manager/example",
+    # "delegation-manager/cli",
     "chain-traits/program"
 ]
 

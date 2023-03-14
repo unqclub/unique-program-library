@@ -51,6 +51,36 @@ impl TraitConfig {
             })
             .collect()
     }
+
+    pub fn update_traits(&mut self, new_values: &Vec<String>, action: &TraitAction, name: &String) {
+        if let Some(existing_trait) = self.available_traits.get_mut(name) {
+            for new_val in new_values.iter() {
+                if let Some(existing_value) = existing_trait
+                    .iter_mut()
+                    .find(|v| v.value == new_val.clone())
+                {
+                    existing_value.is_active = TraitAction::Add == *action;
+                } else {
+                    existing_trait.push(AvailableTrait {
+                        value: new_val.clone(),
+                        is_active: *action == TraitAction::Add,
+                    });
+                }
+            }
+        } else {
+            self.available_traits.insert(
+                name.clone(),
+                new_values
+                    .iter()
+                    .map(|val| AvailableTrait {
+                        is_active: *action == TraitAction::Add,
+                        value: val.clone(),
+                    })
+                    .collect(),
+            );
+        }
+    }
+
     pub fn get_trait_config_seeds<'a>(collection: &'a Pubkey) -> [&'a [u8]; 2] {
         [b"trait-config", collection.as_ref()]
     }

@@ -1,10 +1,6 @@
 use std::{collections::HashMap, ops::DerefMut};
 
 use borsh::BorshSerialize;
-use mpl_token_metadata::{
-    pda::find_metadata_account,
-    state::{Metadata, TokenMetadataAccount},
-};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     borsh::try_from_slice_unchecked,
@@ -32,7 +28,7 @@ pub fn process_create_trait<'a>(
 ) -> ProgramResult {
     let account_infos = &mut accounts.iter();
     let nft_mint_info = next_account_info(account_infos)?;
-    let nft_metadata_info = next_account_info(account_infos)?;
+    let _nft_metadata_info = next_account_info(account_infos)?;
     let trait_config_account_info = next_account_info(account_infos)?;
     let trait_account_info = next_account_info(account_infos)?;
     let payer = next_account_info(account_infos)?;
@@ -47,32 +43,32 @@ pub fn process_create_trait<'a>(
         TraitError::TraitConfigNotInitialized
     );
 
-    let metadata_acc = Metadata::from_account_info(nft_metadata_info)?;
+    // let metadata_acc = Metadata::from_account_info(nft_metadata_info)?;
 
-    let metadata_address = find_metadata_account(nft_mint_info.key).0;
+    // let metadata_address = find_metadata_account(nft_mint_info.key).0;
 
-    assert!(
-        metadata_address == *nft_metadata_info.key,
-        "{:?}",
-        TraitError::InvalidCollection
-    );
+    // assert!(
+    //     metadata_address == *nft_metadata_info.key,
+    //     "{:?}",
+    //     TraitError::InvalidCollection
+    // );
 
     let trait_config =
         try_from_slice_unchecked::<TraitConfig>(&trait_config_account_info.data.borrow())?;
 
-    if let Some(collection) = metadata_acc.collection {
-        assert!(
-            collection.key == trait_config.collection,
-            "{:?}",
-            TraitError::InvalidCollection
-        );
-    } else {
-        assert!(
-            metadata_acc.data.creators.unwrap().get(0).unwrap().address == trait_config.collection,
-            "{:?}",
-            TraitError::InvalidCollection
-        );
-    }
+    // if let Some(collection) = metadata_acc.collection {
+    //     assert!(
+    //         collection.key == trait_config.collection,
+    //         "{:?}",
+    //         TraitError::InvalidCollection
+    //     );
+    // } else {
+    //     assert!(
+    //         metadata_acc.data.creators.unwrap().get(0).unwrap().address == trait_config.collection,
+    //         "{:?}",
+    //         TraitError::InvalidCollection
+    //     );
+    // }
 
     if *payer.key != trait_config.update_authoirty {
         let mut mint_to_executed = false;

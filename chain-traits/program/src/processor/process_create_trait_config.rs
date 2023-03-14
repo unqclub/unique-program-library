@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ops::DerefMut;
 
-use crate::instruction::{CreateTraitConfigArgs, TraitAction};
+use crate::instruction::CreateTraitConfigArgs;
 use crate::state::TraitConfig;
 use crate::utils::{create_program_account, transfer_lamports};
 use crate::{errors::TraitError, state::AvailableTrait};
@@ -95,12 +95,10 @@ pub fn process_create_trait_config<'a>(
         let data_len = trait_config.data_len();
 
         for new_trait in data.iter() {
-            trait_config_account.available_traits.insert(
-                new_trait.name.clone(),
-                TraitConfig::map_available_traits(
-                    new_trait.values.clone(),
-                    new_trait.action == TraitAction::Add,
-                ),
+            trait_config_account.update_traits(
+                &new_trait.values,
+                &new_trait.action,
+                &new_trait.name,
             );
         }
 
