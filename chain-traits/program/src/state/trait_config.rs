@@ -12,9 +12,13 @@ use crate::{
 #[derive(ShankAccount, BorshDeserialize, BorshSerialize, Clone, Debug)]
 
 pub struct TraitConfig {
+    //Collection key (First creator if NFTs do not have collection)
     pub collection: Pubkey,
+    // Pubkey of collection update authority (From metaplex metadata)
     pub update_authoirty: Pubkey,
+    // Unix timestamp of last account modification
     pub last_modified: i64,
+    //All available traits for certain collection
     pub available_traits: HashMap<String, Vec<AvailableTrait>>,
 }
 
