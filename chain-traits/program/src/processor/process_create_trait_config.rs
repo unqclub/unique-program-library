@@ -117,6 +117,7 @@ pub fn process_create_trait_config<'a>(
         )?;
 
         trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
+
         trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
     }
 

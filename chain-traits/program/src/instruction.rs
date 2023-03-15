@@ -74,6 +74,7 @@ pub struct CreateTraitConfigArgs {
 pub enum TraitAction {
     Add,
     Remove,
+    Modify,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug, Clone)]

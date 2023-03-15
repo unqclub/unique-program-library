@@ -54,28 +54,10 @@
       "name": "CreateTrait",
       "accounts": [
         {
-          "name": "nftMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint of nft"
-        },
-        {
-          "name": "nftMetadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata of nft"
-        },
-        {
           "name": "traitConfigAccount",
           "isMut": false,
           "isSigner": false,
           "desc": "Account used for storing trait config on-chain"
-        },
-        {
-          "name": "traitAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Account used for storing traits for nft on-chain"
         },
         {
           "name": "payer",
@@ -101,7 +83,9 @@
           "name": "data",
           "type": {
             "vec": {
-              "defined": "CreateTraitArgs"
+              "vec": {
+                "defined": "CreateTraitArgs"
+              }
             }
           }
         }
@@ -243,6 +227,9 @@
           },
           {
             "name": "Remove"
+          },
+          {
+            "name": "Modify"
           }
         ]
       }
