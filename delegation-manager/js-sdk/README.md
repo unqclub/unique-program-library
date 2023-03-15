@@ -76,4 +76,4 @@ export default UdmExample;
 
 ## Live demo - UDM dapp
 
-<a href="https://unique-delegation-manager.surge.sh/" target="_blank">react-day-picker-v7.netlify.app</a>
+<a href="https://unique-delegation-manager.surge.sh/" target="_blank">Unique delegation manager Dapp</a>
