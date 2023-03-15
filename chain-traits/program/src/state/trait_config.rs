@@ -32,7 +32,7 @@ impl TraitConfig {
                     .values
                     .iter()
                     .map(|traits_data| AvailableTrait {
-                        value: traits_data.clone(),
+                        value: traits_data.to_string(),
                         is_active: trait_info.action == TraitAction::Add,
                     })
                     .collect(),
@@ -47,10 +47,46 @@ impl TraitConfig {
             .iter()
             .map(|trait_info| AvailableTrait {
                 is_active,
-                value: trait_info.clone(),
+                value: trait_info.to_string(),
             })
             .collect()
     }
+
+    pub fn update_traits(&mut self, new_values: &Vec<String>, action: &TraitAction, name: &String) {
+        if let Some(existing_trait) = self.available_traits.get_mut(name) {
+            if action == &TraitAction::Add {
+                let mapped_args: &mut Vec<AvailableTrait> = &mut new_values
+                    .iter()
+                    .map(|val| AvailableTrait {
+                        is_active: true,
+                        value: val.clone(),
+                    })
+                    .collect();
+                existing_trait.append(mapped_args);
+            } else {
+                for new_val in new_values.iter() {
+                    let existing_value = existing_trait
+                        .iter_mut()
+                        .find(|v| &v.value == new_val)
+                        .unwrap();
+
+                    existing_value.is_active = TraitAction::Modify == *action;
+                }
+            }
+        } else {
+            self.available_traits.insert(
+                name.clone(),
+                new_values
+                    .iter()
+                    .map(|val| AvailableTrait {
+                        is_active: *action == TraitAction::Add,
+                        value: val.to_string(),
+                    })
+                    .collect(),
+            );
+        }
+    }
+
     pub fn get_trait_config_seeds<'a>(collection: &'a Pubkey) -> [&'a [u8]; 2] {
         [b"trait-config", collection.as_ref()]
     }
