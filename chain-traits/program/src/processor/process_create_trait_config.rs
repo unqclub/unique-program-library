@@ -3,12 +3,15 @@ use std::ops::DerefMut;
 
 use crate::instruction::{CreateTraitConfigArgs, TraitAction};
 use crate::state::TraitConfig;
-use crate::utils::{create_program_account, transfer_lamports};
+use crate::utils::{
+    calculate_array_length, create_program_account, get_u32_from_slice, transfer_lamports,
+};
 use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
+use solana_program::msg;
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
 use solana_program::{
@@ -97,59 +100,83 @@ pub fn process_create_trait_config<'a>(
         if adding_traits.len() > 0 {
             let account_data = &trait_config.data.borrow();
             let existing_data = &account_data[76..];
+            msg!("EXISTING DATA LEN:{:?}", existing_data.len());
             let fixed_bytes = &account_data[0..76];
 
-            let mut new_len: usize = 0;
+            let mut new_account_len: usize = 0;
             let mut new_data: Vec<u8> = Vec::new();
             for arg in data.iter() {
                 let serialized_arg_name = arg.name.try_to_vec().unwrap();
+                let mut index = 0;
 
-                for mut index in 0..existing_data.len() {
-                    let key = &existing_data[index..serialized_arg_name.len()];
-                    if key == serialized_arg_name {
-                        new_data.extend_from_slice(key);
-                        let current_vec_len = existing_data[key.len() + index + 1];
-                        new_data.extend_from_slice(&[current_vec_len + arg.values.len() as u8]);
-                        let old_vec_start = key.len() + index + 2 as usize;
-                        let old_vec_end = existing_data[key.len() + index + 1] as usize;
-                        let curr_vec = &existing_data[old_vec_start..old_vec_end];
-                        new_data.extend_from_slice(curr_vec);
-                        let new_traits: Vec<AvailableTrait> = arg
-                            .values
-                            .iter()
-                            .map(|arg| AvailableTrait {
-                                is_active: true,
-                                value: arg.clone(),
-                            })
-                            .collect();
-                        let serialized_new_traits = new_traits.try_to_vec().unwrap();
-                        new_len += serialized_new_traits.len();
-                        new_data.extend_from_slice(&serialized_new_traits);
-                    } else {
-                        new_data.extend_from_slice(key);
-                        let vec_length = usize::from(existing_data[index + key.len() + 1]);
-                        new_data
-                            .extend_from_slice(&existing_data[index + key.len() + 1..vec_length]);
+                loop {
+                    if index >= existing_data.len() {
+                        break;
                     }
+                    msg!("INDEX:{:?}", index);
+                    let key = &existing_data[index..index + serialized_arg_name.len()];
+                    msg!("KEY:{:?}", key);
+                    let key_length = get_u32_from_slice(&key[0..4]) as usize;
+                    msg!("KEY LENGTH:{:?}", key_length);
+                    let array_length = get_u32_from_slice(
+                        &existing_data[index + key_length + 4..index + key_length + 8],
+                    ) as usize;
 
-                    index += key.len() + usize::from(existing_data[key.len() + index + 1]);
+                    // msg!("ARRAY LENGTH:{:?}", array_length);
+
+                    let array_bytes = calculate_array_length(
+                        &existing_data[index + key_length + 8..],
+                        array_length,
+                    );
+
+                    msg!("ARRAY BYTES:{:?}", array_bytes);
+
+                    let existing_array = &existing_data
+                        [index + key_length + 8..index + key_length + 8 + array_bytes];
+
+                    // msg!("EXISTING ARRAY:{:?}", array_length);
+
+                    // if key == serialized_arg_name {
+                    //     new_data.extend_from_slice(&key);
+                    //     let new_len = (array_length + arg.values.len()).to_le_bytes();
+                    //     new_data.extend_from_slice(&new_len);
+                    //     new_data.extend_from_slice(&existing_array);
+                    //     let mapped_values: Vec<AvailableTrait> = arg
+                    //         .values
+                    //         .iter()
+                    //         .map(|val| AvailableTrait {
+                    //             value: val.clone(),
+                    //             is_active: true,
+                    //         })
+                    //         .collect();
+                    //     let serialized_values = mapped_values.try_to_vec().unwrap();
+
+                    //     new_account_len += serialized_values.len();
+
+                    //     new_data.extend_from_slice(&serialized_values);
+                    // } else {
+                    //     new_data.extend_from_slice(&key_length.to_le_bytes());
+                    //     new_data.extend_from_slice(&array_length.to_le_bytes());
+                    //     new_data.extend_from_slice(&existing_array);
+                    // }
+                    index += 4 + key_length + 4 + (array_length * array_bytes);
                 }
             }
-            transfer_lamports(
-                update_autority,
-                trait_config,
-                Rent::default().minimum_balance(new_len),
-                system_program,
-            )?;
-            let mut new_account_data: Vec<u8> = Vec::new();
-            new_account_data.extend_from_slice(&fixed_bytes);
-            new_account_data.extend_from_slice(&new_data);
+            // transfer_lamports(
+            //     update_autority,
+            //     trait_config,
+            //     Rent::default().minimum_balance(new_account_len),
+            //     system_program,
+            // )?;
+            // let mut new_account_data: Vec<u8> = Vec::new();
+            // new_account_data.extend_from_slice(&fixed_bytes);
+            // new_account_data.extend_from_slice(&new_data);
 
-            trait_config.realloc(new_data.len(), false)?;
+            // trait_config.realloc(new_data.len(), false)?;
 
-            trait_config
-                .try_borrow_mut_data()?
-                .copy_from_slice(&new_data);
+            // trait_config
+            //     .try_borrow_mut_data()?
+            //     .copy_from_slice(&new_data);
         } else {
             let mut trait_config_account =
                 try_from_slice_unchecked::<TraitConfig>(&trait_config.data.borrow_mut())?;
