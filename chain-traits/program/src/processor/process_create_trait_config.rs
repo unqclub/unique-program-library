@@ -100,7 +100,8 @@ pub fn process_create_trait_config<'a>(
         if adding_traits.len() > 0 {
             let account_data = &trait_config.data.borrow();
             let existing_data = &account_data[76..];
-            msg!("EXISTING DATA LEN:{:?}", existing_data.len());
+
+            msg!("EXISTING DATA:{:?}", existing_data);
             let fixed_bytes = &account_data[0..76];
 
             let mut new_account_len: usize = 0;
@@ -136,30 +137,30 @@ pub fn process_create_trait_config<'a>(
 
                     // msg!("EXISTING ARRAY:{:?}", array_length);
 
-                    // if key == serialized_arg_name {
-                    //     new_data.extend_from_slice(&key);
-                    //     let new_len = (array_length + arg.values.len()).to_le_bytes();
-                    //     new_data.extend_from_slice(&new_len);
-                    //     new_data.extend_from_slice(&existing_array);
-                    //     let mapped_values: Vec<AvailableTrait> = arg
-                    //         .values
-                    //         .iter()
-                    //         .map(|val| AvailableTrait {
-                    //             value: val.clone(),
-                    //             is_active: true,
-                    //         })
-                    //         .collect();
-                    //     let serialized_values = mapped_values.try_to_vec().unwrap();
+                    if key == serialized_arg_name {
+                        new_data.extend_from_slice(&key);
+                        let new_len = (array_length + arg.values.len()).to_le_bytes();
+                        new_data.extend_from_slice(&new_len);
+                        new_data.extend_from_slice(&existing_array);
+                        let mapped_values: Vec<AvailableTrait> = arg
+                            .values
+                            .iter()
+                            .map(|val| AvailableTrait {
+                                value: val.clone(),
+                                is_active: true,
+                            })
+                            .collect();
+                        let serialized_values = mapped_values.try_to_vec().unwrap();
 
-                    //     new_account_len += serialized_values.len();
+                        new_account_len += serialized_values.len();
 
-                    //     new_data.extend_from_slice(&serialized_values);
-                    // } else {
-                    //     new_data.extend_from_slice(&key_length.to_le_bytes());
-                    //     new_data.extend_from_slice(&array_length.to_le_bytes());
-                    //     new_data.extend_from_slice(&existing_array);
-                    // }
-                    index += 4 + key_length + 4 + (array_length * array_bytes);
+                        new_data.extend_from_slice(&serialized_values);
+                    } else {
+                        new_data.extend_from_slice(&key_length.to_le_bytes());
+                        new_data.extend_from_slice(&array_length.to_le_bytes());
+                        new_data.extend_from_slice(&existing_array);
+                    }
+                    index += 4 + key_length + 4 + array_bytes;
                 }
             }
             // transfer_lamports(

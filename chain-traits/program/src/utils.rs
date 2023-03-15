@@ -76,7 +76,7 @@ pub fn calculate_array_length(bytes: &[u8], array_length: usize) -> usize {
 
         msg!("ARR SIZE UTIL:{:?}", arr_size);
 
-        arr_len += (arr_size + 1) as usize;
+        arr_len += (4 + arr_size + 1) as usize;
 
         bytes_indexer += 4 + arr_size as usize + 1;
         index += 1;
