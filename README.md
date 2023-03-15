@@ -7,4 +7,8 @@
 The Unique Program Library (UPL) is a collection of various Solana on-chain programs.
 
 It currently contains:
-* Unique Delegation Manager (UDM) program: a toolset for managing a “master-delegate” relationship between 1-to-many wallets
+
+- Unique Delegation Manager (UDM) program: a toolset for managing a “master-delegate” relationship between 1-to-many wallets
+
+- Chain Traits program: a toolset for storing NFT traits, that are currently stored off-chain, on Solana blockchain
+  and, by doing that, provide full transparency and decentralization in NFT space.
