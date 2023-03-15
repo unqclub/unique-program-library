@@ -2,27 +2,25 @@
 
 Unique Delegation Manager (UDM) is a toolset built for managing a "master-delegate" relationship between 1-to-many wallets. Use UDM SDK to interact with UDM Solana program and accounts.
 
-The main account to interact with is the `delegation account`. The delegation account is essentialy an on chain statement which confirms that the representative has the authority to execute smart contract actions that are otherwise reserved for the master. This account can also be used by projects to display asset ownership by proxy and give other logical priviledges. Two invovled parties that makes delegation are master and representative. The `master` is the one who initiated delegation account. The `representative` is the one who was invited to represent the master.
+The main account to interact with is the `delegation account`. The delegation account is essentialy an on chain statement which confirms that the representative has the authority to execute smart contract actions that are otherwise reserved for the master. This account can also be used by projects to display asset ownership by proxy and give other logical priviledges. The two parties involved in the delegation proccess are master and representative. The `master` is the one who initiated the delegation account. The `representative` is the one who was invited to represent the master.
 
 ## Installation
 
 ### For use in Node.js or a web application
 
 ```
-
 $ npm install --save @unique.vc/udm.js
-
 ```
 
 ## Main features
 
 ### Check if delegation between master and representative exists
 
-`checkIfDelegationExists` - This SDK function checks if delegation account for passed master and representative public keys exists and if it is confirmed.
+`checkIfDelegationExists` - This SDK function checks if the delegation account for passed master and representative public keys exists and if it is confirmed.
 
 ### Get delegation address
 
-`getDelegationAddress` - This SDK function returns address of the Delegation PDA for specific master and representative public keys.
+`getDelegationAddress` - This SDK function returns address of the delegation PDA for specific master and representative public keys.
 
 ### Get all masters for specific representative
 
