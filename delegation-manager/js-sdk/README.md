@@ -18,7 +18,7 @@ $ npm install --save @unique.vc/udm.js
 
 ### Check if delegation between master and representative exists
 
-`checkIfDelegationExists` - This SDK function checks if delegation account for passed master and representative public keys exists and if is confirmed.
+`checkIfDelegationExists` - This SDK function checks if delegation account for passed master and representative public keys exists and if it is confirmed.
 
 ### Get delegation address
 
