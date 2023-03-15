@@ -1,14 +1,16 @@
 # Unique Chain Traits - UCT
 
-An open-source, shared protocol for storing NFT traits on chain.
+Unique Chain Traits is a simple tool to manage NFT collection’s on-chain traits on Solana.
 
 # About
 
-Unique.vc Chain traits is tool that enables storing NFT traits,that are usually stored on off-chain JSON file, on Solana blockchain.
-
-Main idea is to enable 'Update Authority' of certain NFT collection to migrate traits of all NFTs from his collection to Solana accounts.
+With UCT, you can transfer the entire data for your collection’s traits onto chain, as well as manage them afterwards - change certain NFT’s traits, remove certain traits, and more.
+Having traits on-chain allows programs to directly interact with them, which opens up a wide range of use cases: gating access with traits, trading certain traits of the collections fully on chain - and those are just about the collections, however, for example, for ticketing systems and other applications of NFTs even more cases can arise.
+UCT is fully open source, and while we did build a front-end for it as well, we encourage everyone to contribute, integrate, and build with UCT.
 
 # Background
+
+Previously, most collections only had there trait data off-chain, which is suboptimal not just from the perspective of decentralization (since that data is stored on a server) but also from the user experience perspective, since on-chain programs don’t have direct access to off-chain information.
 
 # Documentation
 
