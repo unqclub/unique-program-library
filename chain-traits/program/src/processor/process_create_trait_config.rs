@@ -4,7 +4,8 @@ use std::ops::DerefMut;
 use crate::instruction::{CreateTraitConfigArgs, TraitAction};
 use crate::state::TraitConfig;
 use crate::utils::{
-    calculate_array_length, create_program_account, get_u32_from_slice, transfer_lamports,
+    calculate_array_length, create_program_account, get_u32_from_slice, shift_bytes,
+    transfer_lamports,
 };
 use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
@@ -98,39 +99,62 @@ pub fn process_create_trait_config<'a>(
             .iter()
             .filter(|arg| arg.action == TraitAction::Modify)
             .collect_vec();
-        let (new_len, new_data) = if adding_traits.len() > 0 {
-            let account_data = &*trait_config.data.borrow();
-            let existing_data = &account_data[76..];
+        if adding_traits.len() > 0 {
+            let mut new_values: Vec<String> = Vec::new();
+            adding_traits.iter().for_each(|add_trt| {
+                add_trt
+                    .values
+                    .iter()
+                    .for_each(|val| new_values.push(val.clone()))
+            });
 
-            let mut new_account_len: usize = 0;
-            let mut new_data: Vec<u8> = Vec::new();
+            let serialized_values = &new_values.try_to_vec().unwrap()[4..];
+
+            transfer_lamports(
+                update_autority,
+                trait_config,
+                Rent::default().minimum_balance(serialized_values.len()),
+                system_program,
+            )?;
+
+            trait_config.realloc(trait_config.data_len() + serialized_values.len(), false)?;
+
+            drop(serialized_values);
+
+            let account_data = &mut trait_config.data.borrow_mut()[..];
+
+            msg!("DATA LEN REALL :{:?}", account_data);
             for arg in data.iter() {
                 let serialized_arg_name = arg.name.try_to_vec().unwrap();
-                let mut index = 0;
+                let mut index = 76;
 
                 loop {
-                    if index >= existing_data.len() {
+                    msg!("INDEX:{:?}", index);
+                    if index >= account_data.len() {
                         break;
                     }
-                    let key = &existing_data[index..index + serialized_arg_name.len()];
+                    let key = &account_data[index..index + serialized_arg_name.len()];
+                    msg!("KEY:{:?}", key);
                     let key_length = get_u32_from_slice(&key[0..4]) as usize;
+                    msg!("KEY LENGTH:{:?}", key_length);
+                    let array_len_start = index + 4 + key_length;
+                    msg!("ARR LEN START:{:?}", array_len_start);
                     let array_length = get_u32_from_slice(
-                        &existing_data[index + key_length + 4..index + key_length + 8],
+                        &account_data[index + key_length + 4..index + key_length + 8],
                     ) as usize;
 
+                    msg!("ARR LEN :{:?}", array_length);
+
                     let array_bytes = calculate_array_length(
-                        &existing_data[index + key_length + 8..],
+                        &account_data[index + key_length + 8..],
                         array_length,
                     );
 
-                    let existing_array = &existing_data
-                        [index + key_length + 8..index + key_length + 8 + array_bytes];
+                    msg!("ARR BYTES :{:?}", array_bytes);
+
+                    let mut arg_values_len = 0;
 
                     if key == serialized_arg_name {
-                        new_data.extend_from_slice(&key);
-                        let new_len = (array_length + arg.values.len()).to_le_bytes();
-                        new_data.extend_from_slice(&new_len);
-                        new_data.extend_from_slice(&existing_array);
                         let mapped_values: Vec<AvailableTrait> = arg
                             .values
                             .iter()
@@ -141,25 +165,18 @@ pub fn process_create_trait_config<'a>(
                             .collect();
                         let serialized_values = &mapped_values.try_to_vec().unwrap()[4..];
 
-                        msg!("SERIALIZED LEN:{:?}", serialized_values.len());
+                        arg_values_len = serialized_values.len();
 
-                        new_account_len += serialized_values.len();
-
-                        new_data.extend_from_slice(&serialized_values);
-                    } else {
-                        new_data.extend_from_slice(&key_length.to_le_bytes());
-                        new_data.extend_from_slice(&array_length.to_le_bytes());
-                        new_data.extend_from_slice(&existing_array);
+                        shift_bytes(
+                            account_data,
+                            serialized_values,
+                            array_len_start,
+                            (array_length + arg.values.len()) as u32,
+                        );
                     }
-                    index += 4 + key_length + 4 + array_bytes;
+                    index += 4 + key_length + 4 + array_bytes + arg_values_len;
                 }
             }
-
-            let mut new_account_data: Vec<u8> = Vec::new();
-            new_account_data.extend_from_slice(&account_data[0..76]);
-            new_account_data.extend_from_slice(&new_data);
-
-            (new_account_len, new_account_data)
         } else {
             let mut trait_config_account =
                 try_from_slice_unchecked::<TraitConfig>(&trait_config.data.borrow_mut())?;
@@ -180,21 +197,19 @@ pub fn process_create_trait_config<'a>(
                 .len()
                 .checked_sub(data_len)
                 .unwrap();
-            (realloc_data_len, trait_config_account.try_to_vec().unwrap())
+            transfer_lamports(
+                update_autority,
+                trait_config,
+                Rent::default().minimum_balance(realloc_data_len),
+                system_program,
+            )?;
+
+            trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
         };
 
-        transfer_lamports(
-            update_autority,
-            trait_config,
-            Rent::default().minimum_balance(new_len),
-            system_program,
-        )?;
-
-        trait_config.realloc(new_data.len(), false)?;
-
-        trait_config
-            .try_borrow_mut_data()?
-            .copy_from_slice(&new_data);
+        // trait_config
+        //     .try_borrow_mut_data()?
+        //     .copy_from_slice(&new_data);
     }
 
     Ok(())
