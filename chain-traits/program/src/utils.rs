@@ -1,6 +1,7 @@
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
+    msg,
     program::{invoke, invoke_signed},
     pubkey::Pubkey,
     rent::Rent,
@@ -80,15 +81,15 @@ pub fn calculate_array_length(bytes: &[u8], array_length: usize) -> usize {
     arr_len
 }
 
-pub fn shift_bytes(bytes: &mut [u8], new_data: &[u8], mut start_index: usize, new_array_len: u32) {
+pub fn shift_bytes(bytes: &mut [u8], new_data: &[u8], start_index: usize, new_array_len: u32) {
+    msg!("NEW ARR LEN:{:?}", new_array_len);
     bytes[start_index..start_index + 4].copy_from_slice(&new_array_len.to_le_bytes());
-    start_index += 4;
     bytes.copy_within(
-        start_index..bytes.len() - new_data.len(),
-        start_index + new_data.len(),
+        start_index + 4..bytes.len() - new_data.len(),
+        start_index + 4 + new_data.len(),
     );
 
     for (index, byte) in new_data.iter().enumerate() {
-        bytes[index] = *byte;
+        bytes[index + start_index + 4] = *byte;
     }
 }

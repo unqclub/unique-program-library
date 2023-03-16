@@ -8,7 +8,7 @@ use crate::utils::{
     transfer_lamports,
 };
 use crate::{errors::TraitError, state::AvailableTrait};
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use itertools::Itertools;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
@@ -99,7 +99,7 @@ pub fn process_create_trait_config<'a>(
             .iter()
             .filter(|arg| arg.action == TraitAction::Modify)
             .collect_vec();
-        if adding_traits.len() > 0 {
+        let data = if adding_traits.len() > 0 {
             let mut new_values: Vec<String> = Vec::new();
             adding_traits.iter().for_each(|add_trt| {
                 add_trt
@@ -117,42 +117,35 @@ pub fn process_create_trait_config<'a>(
                 system_program,
             )?;
 
-            trait_config.realloc(trait_config.data_len() + serialized_values.len(), false)?;
+            trait_config.realloc(
+                trait_config.data_len() + serialized_values.len() + new_values.len(),
+                false,
+            )?;
 
             drop(serialized_values);
 
             let account_data = &mut trait_config.data.borrow_mut()[..];
 
-            msg!("DATA LEN REALL :{:?}", account_data);
             for arg in data.iter() {
                 let serialized_arg_name = arg.name.try_to_vec().unwrap();
                 let mut index = 76;
 
                 loop {
-                    msg!("INDEX:{:?}", index);
                     if index >= account_data.len() {
                         break;
                     }
-                    let key = &account_data[index..index + serialized_arg_name.len()];
-                    msg!("KEY:{:?}", key);
-                    let key_length = get_u32_from_slice(&key[0..4]) as usize;
-                    msg!("KEY LENGTH:{:?}", key_length);
+                    let key_length = get_u32_from_slice(&account_data[index..index + 4]) as usize;
+                    let key = &account_data[index..index + key_length + 4];
+
                     let array_len_start = index + 4 + key_length;
-                    msg!("ARR LEN START:{:?}", array_len_start);
                     let array_length = get_u32_from_slice(
                         &account_data[index + key_length + 4..index + key_length + 8],
                     ) as usize;
-
-                    msg!("ARR LEN :{:?}", array_length);
 
                     let array_bytes = calculate_array_length(
                         &account_data[index + key_length + 8..],
                         array_length,
                     );
-
-                    msg!("ARR BYTES :{:?}", array_bytes);
-
-                    let mut arg_values_len = 0;
 
                     if key == serialized_arg_name {
                         let mapped_values: Vec<AvailableTrait> = arg
@@ -165,16 +158,17 @@ pub fn process_create_trait_config<'a>(
                             .collect();
                         let serialized_values = &mapped_values.try_to_vec().unwrap()[4..];
 
-                        arg_values_len = serialized_values.len();
-
                         shift_bytes(
                             account_data,
                             serialized_values,
                             array_len_start,
                             (array_length + arg.values.len()) as u32,
                         );
+
+                        index += 4 + key_length + 4 + array_bytes + serialized_values.len();
+                    } else {
+                        index += 4 + key_length + 4 + array_bytes;
                     }
-                    index += 4 + key_length + 4 + array_bytes + arg_values_len;
                 }
             }
         } else {
@@ -191,25 +185,28 @@ pub fn process_create_trait_config<'a>(
                 );
             }
 
-            let realloc_data_len = trait_config_account
+            if let Some(realloc_data_len) = trait_config_account
                 .try_to_vec()
                 .unwrap()
                 .len()
                 .checked_sub(data_len)
-                .unwrap();
-            transfer_lamports(
-                update_autority,
-                trait_config,
-                Rent::default().minimum_balance(realloc_data_len),
-                system_program,
-            )?;
+            {
+                transfer_lamports(
+                    update_autority,
+                    trait_config,
+                    Rent::default().minimum_balance(realloc_data_len),
+                    system_program,
+                )?;
+            }
 
-            trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
+            let mut serialized_data = trait_config_account.try_to_vec().unwrap();
+
+            trait_config.realloc(serialized_data.len(), false)?;
+            trait_config
+                .try_borrow_mut_data()?
+                .copy_from_slice(&serialized_data);
         };
-
-        // trait_config
-        //     .try_borrow_mut_data()?
-        //     .copy_from_slice(&new_data);
+        msg!("DATA:{:?}", data);
     }
 
     Ok(())
