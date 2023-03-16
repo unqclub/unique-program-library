@@ -1,7 +1,6 @@
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
-    msg,
     program::{invoke, invoke_signed},
     pubkey::Pubkey,
     rent::Rent,
@@ -65,16 +64,12 @@ pub fn calculate_array_length(bytes: &[u8], array_length: usize) -> usize {
 
     let mut bytes_indexer = 0;
 
-    msg!("BYTES:{:?}", bytes);
-
     loop {
         if index >= array_length {
             break;
         }
 
         let arr_size = get_u32_from_slice(&bytes[bytes_indexer..bytes_indexer + 4]);
-
-        msg!("ARR SIZE UTIL:{:?}", arr_size);
 
         arr_len += (4 + arr_size + 1) as usize;
 

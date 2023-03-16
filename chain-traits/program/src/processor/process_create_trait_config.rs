@@ -11,6 +11,7 @@ use borsh::BorshSerialize;
 use itertools::Itertools;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
+
 use solana_program::msg;
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
@@ -101,18 +102,13 @@ pub fn process_create_trait_config<'a>(
             let account_data = &*trait_config.data.borrow();
             let existing_data = &account_data[76..];
 
-            msg!("EXISTING DATA:{:?}", existing_data);
-
             let mut new_account_len: usize = 0;
             let mut new_data: Vec<u8> = Vec::new();
-            msg!("ASDDD");
             for arg in data.iter() {
                 let serialized_arg_name = arg.name.try_to_vec().unwrap();
                 let mut index = 0;
 
-                msg!("ARG:{:?}", arg);
                 loop {
-                    msg!("INDEX:{:?}", index);
                     if index >= existing_data.len() {
                         break;
                     }
@@ -143,7 +139,9 @@ pub fn process_create_trait_config<'a>(
                                 value: val.clone(),
                             })
                             .collect();
-                        let serialized_values = mapped_values.try_to_vec().unwrap();
+                        let serialized_values = &mapped_values.try_to_vec().unwrap()[4..];
+
+                        msg!("SERIALIZED LEN:{:?}", serialized_values.len());
 
                         new_account_len += serialized_values.len();
 
@@ -154,7 +152,6 @@ pub fn process_create_trait_config<'a>(
                         new_data.extend_from_slice(&existing_array);
                     }
                     index += 4 + key_length + 4 + array_bytes;
-                    msg!("INDEX INCREASED:{:?}", index);
                 }
             }
 
@@ -193,11 +190,7 @@ pub fn process_create_trait_config<'a>(
             system_program,
         )?;
 
-        msg!("LAM TRANS");
-
         trait_config.realloc(new_data.len(), false)?;
-
-        msg!("REALL");
 
         trait_config
             .try_borrow_mut_data()?
