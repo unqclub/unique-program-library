@@ -1,3 +1,4 @@
+use borsh::BorshSerialize;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -7,6 +8,8 @@ use solana_program::{
     rent::Rent,
     system_instruction,
 };
+
+use crate::{instruction::CreateTraitConfigArgs, state::AvailableTrait};
 
 pub const SYSVAR_INSTRUCTIONS: &str = "Sysvar1nstructions1111111111111111111111111";
 
@@ -91,5 +94,51 @@ pub fn shift_bytes(bytes: &mut [u8], new_data: &[u8], start_index: usize, new_ar
 
     for (index, byte) in new_data.iter().enumerate() {
         bytes[index + start_index + 4] = *byte;
+    }
+}
+
+pub fn add_new_traits_bytes(account_data: &mut [u8], data: Vec<CreateTraitConfigArgs>) {
+    for arg in data.iter() {
+        let serialized_arg_name = arg.name.try_to_vec().unwrap();
+        let mut index = 76;
+
+        loop {
+            if index >= account_data.len() {
+                break;
+            }
+            let key_length = get_u32_from_slice(&account_data[index..index + 4]) as usize;
+            let key = &account_data[index..index + key_length + 4];
+
+            let array_len_start = index + 4 + key_length;
+            let array_length =
+                get_u32_from_slice(&account_data[index + key_length + 4..index + key_length + 8])
+                    as usize;
+
+            let array_bytes =
+                calculate_array_length(&account_data[index + key_length + 8..], array_length);
+
+            if key == serialized_arg_name {
+                let mapped_values: Vec<AvailableTrait> = arg
+                    .values
+                    .iter()
+                    .map(|val| AvailableTrait {
+                        is_active: true,
+                        value: val.clone(),
+                    })
+                    .collect();
+                let serialized_values = &mapped_values.try_to_vec().unwrap()[4..];
+
+                shift_bytes(
+                    account_data,
+                    serialized_values,
+                    array_len_start,
+                    (array_length + arg.values.len()) as u32,
+                );
+
+                index += 4 + key_length + 4 + array_bytes + serialized_values.len();
+            } else {
+                index += 4 + key_length + 4 + array_bytes;
+            }
+        }
     }
 }
