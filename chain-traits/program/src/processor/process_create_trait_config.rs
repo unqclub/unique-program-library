@@ -8,12 +8,11 @@ use crate::utils::{
     transfer_lamports,
 };
 use crate::{errors::TraitError, state::AvailableTrait};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use itertools::Itertools;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
 
-use solana_program::msg;
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
 use solana_program::{
@@ -99,7 +98,7 @@ pub fn process_create_trait_config<'a>(
             .iter()
             .filter(|arg| arg.action == TraitAction::Modify)
             .collect_vec();
-        let data = if adding_traits.len() > 0 {
+        if adding_traits.len() > 0 {
             let mut new_values: Vec<String> = Vec::new();
             adding_traits.iter().for_each(|add_trt| {
                 add_trt
@@ -199,14 +198,13 @@ pub fn process_create_trait_config<'a>(
                 )?;
             }
 
-            let mut serialized_data = trait_config_account.try_to_vec().unwrap();
+            let serialized_data = trait_config_account.try_to_vec().unwrap();
 
             trait_config.realloc(serialized_data.len(), false)?;
             trait_config
                 .try_borrow_mut_data()?
                 .copy_from_slice(&serialized_data);
         };
-        msg!("DATA:{:?}", data);
     }
 
     Ok(())
