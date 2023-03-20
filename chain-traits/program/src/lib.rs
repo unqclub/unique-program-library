@@ -6,4 +6,4 @@ pub mod instruction;
 pub mod processor;
 pub mod state;
 pub mod utils;
-declare_id!("EVYWVskBg3xFwL3Px5FvGY3iC3kR4n4Mo9AA8kpTk1JB");
+declare_id!("6bPXWATbtFc353SZwJv2u13v8BLNTcieZ1Nb2Tcm74PW");

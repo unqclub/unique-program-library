@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 use std::ops::DerefMut;
 
-use crate::instruction::CreateTraitConfigArgs;
+use crate::instruction::{CreateTraitConfigArgs, TraitAction};
 use crate::state::TraitConfig;
-use crate::utils::{create_program_account, transfer_lamports};
+use crate::utils::{add_new_traits_bytes, create_program_account, transfer_lamports};
 use crate::{errors::TraitError, state::AvailableTrait};
 use borsh::BorshSerialize;
+use itertools::Itertools;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::clock::Clock;
+
 use solana_program::rent::Rent;
 use solana_program::sysvar::Sysvar;
 use solana_program::{
@@ -89,36 +91,73 @@ pub fn process_create_trait_config<'a>(
         trait_config_account.update_authoirty = update_autority.key.clone();
         trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
     } else {
-        let mut trait_config_account =
-            try_from_slice_unchecked::<TraitConfig>(&trait_config.data.borrow_mut())?;
+        let adding_traits = data
+            .iter()
+            .filter(|arg| arg.action == TraitAction::Modify)
+            .collect_vec();
+        if adding_traits.len() > 0 {
+            let mut new_values: Vec<String> = Vec::new();
+            adding_traits.iter().for_each(|add_trt| {
+                add_trt
+                    .values
+                    .iter()
+                    .for_each(|val| new_values.push(val.clone()))
+            });
 
-        let data_len = trait_config.data_len();
+            let serialized_values = &new_values.try_to_vec().unwrap()[4..];
 
-        for new_trait in data.iter() {
-            trait_config_account.update_traits(
-                &new_trait.values,
-                &new_trait.action,
-                &new_trait.name,
-            );
-        }
+            transfer_lamports(
+                update_autority,
+                trait_config,
+                Rent::default().minimum_balance(serialized_values.len()),
+                system_program,
+            )?;
 
-        let realloc_data_len = trait_config_account
-            .try_to_vec()
-            .unwrap()
-            .len()
-            .checked_sub(data_len)
-            .unwrap();
+            trait_config.realloc(
+                trait_config.data_len() + serialized_values.len() + new_values.len(),
+                false,
+            )?;
 
-        transfer_lamports(
-            update_autority,
-            trait_config,
-            Rent::default().minimum_balance(realloc_data_len),
-            system_program,
-        )?;
+            drop(serialized_values);
 
-        trait_config.realloc(trait_config_account.try_to_vec().unwrap().len(), false)?;
+            let account_data = &mut trait_config.data.borrow_mut()[..];
 
-        trait_config_account.serialize(trait_config.try_borrow_mut_data()?.deref_mut())?;
+            add_new_traits_bytes(account_data, data);
+        } else {
+            let mut trait_config_account =
+                try_from_slice_unchecked::<TraitConfig>(&trait_config.data.borrow_mut())?;
+
+            let data_len = trait_config.data_len();
+
+            for new_trait in data.iter() {
+                trait_config_account.update_traits(
+                    &new_trait.values,
+                    &new_trait.action,
+                    &new_trait.name,
+                );
+            }
+
+            if let Some(realloc_data_len) = trait_config_account
+                .try_to_vec()
+                .unwrap()
+                .len()
+                .checked_sub(data_len)
+            {
+                transfer_lamports(
+                    update_autority,
+                    trait_config,
+                    Rent::default().minimum_balance(realloc_data_len),
+                    system_program,
+                )?;
+            }
+
+            let serialized_data = trait_config_account.try_to_vec().unwrap();
+
+            trait_config.realloc(serialized_data.len(), false)?;
+            trait_config
+                .try_borrow_mut_data()?
+                .copy_from_slice(&serialized_data);
+        };
     }
 
     Ok(())
